@@ -40,7 +40,7 @@
                          :vertical-compact="true"
                          :use-css-transforms="true"
             >
-                <grid-item v-for="item in layout" :key="item.i"
+                <grid-item v-for="item in layout" v-bind:id="item.i"
                            :x="item.x"
                            :y="item.y"
                            :w="item.w"
@@ -48,7 +48,7 @@
                            :i="item.i"
                 >
                     <span class="text">{{item.i}}</span>
-                    <div class="smartdown-container" id="smartdown-output">
+                    <div class="smartdown-container" v-bind:id="item.sdi">
                     </div>
                 </grid-item>
             </grid-layout>

@@ -1,13 +1,41 @@
-var testLayout = [
-    {"x":0,"y":0,"w":2,"h":2,"i":"0"},
-    {"x":2,"y":0,"w":2,"h":4,"i":"1"},
-    {"x":4,"y":0,"w":2,"h":5,"i":"2"},
-    {"x":6,"y":0,"w":2,"h":3,"i":"3"},
-];
 
-var testSD = [
-    'smartdown_samples/01.md'
-];
+var SDtext1 = {"text":
+`
+### Welcome to Div1
+
+[What is your name?](:?Name)
+`,
+	       "i":"smartdown-output0"
+};
+
+var SDtext2 = {"text":
+`
+### Welcome to Div2
+
+Pleasant to meet you, [](:!Name)
+`,
+	       "i":"smartdown-output1"
+};
+
+var testSD = [SDtext1, SDtext2];
+
+var numOfSDContent = testSD.length;
+
+var indexes = [for (i of Array(numOfSDContent).keys()) i];
+
+var width = 6;
+var height = 4;
+var testLayout = Array(numOfSDContent);
+
+for (var index of indexes) {
+  testLayout[index] = {"x":index*width,"y":0,"w":width,"h":height,"i":index,"sdi":"smartdown-output"+index};
+}
+console.log(testLayout);
+//var testLayout = [
+//    {"x":0,"y":0,"w":2,"h":2,"i":"0","sdi":"smartdown-output0"},
+//    {"x":2,"y":0,"w":2,"h":4,"i":"1","sdi":"smartdown-output1"}
+//];
+
 //var Vue = require('vue');
 
 //Vue.config.debug = true;
@@ -25,12 +53,34 @@ new Vue({
     },
     data: {
         layout: testLayout,
+        SDcontent: testSD
     },
 });
 
 
 /* eslint-disable */
 /* global smartdown */
+var baseURL = 'https://smartdown.site/';
+var svgIcons = {
+};
+
+function smartdownLoaded() {
+  console.log('smartdownLoaded... populating DIVs');
+  for (var ind of indexes) {
+    var div = document.getElementById(testSD[ind].i);
+    smartdown.setSmartdown(testSD[ind].text, div);
+  } 
+  
+}
+
+var calcHandlers = null;
+const linkRules = [
+];
+
+smartdown.initialize(svgIcons, baseURL, smartdownLoaded, null, calcHandlers, linkRules);
+
+
+/*
 var baseURL = 'https://smartdown.site/';
 var icons = {
 'hypercube': baseURL + '/lib/resources/Hypercube.svg',
@@ -44,7 +94,6 @@ var icons = {
 var multiparts = {};
 
 function cardLoaded(sourceText, cardKey, cardURL) {
-/* eslint no-invalid-this: 0 */
 multiparts = smartdown.partitionMultipart(sourceText);
 var output = document.getElementById('smartdown-output');
 smartdown.setHome(multiparts._default_, output, function() {
@@ -88,7 +137,7 @@ var calcHandlers = smartdown.defaultCalcHandlers;
 const linkRules = [];
 
 smartdown.initialize(icons, baseURL, loadHome, relativeCardLoader, calcHandlers, linkRules);
-
+*/
 
 /* //additional vue-grid-layout functions
     mounted: function () {
