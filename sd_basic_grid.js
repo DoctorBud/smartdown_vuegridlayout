@@ -21,16 +21,16 @@ var testSD = [SDtext1, SDtext2];
 
 var numOfSDContent = testSD.length;
 
-var indexes = [for (i of Array(numOfSDContent).keys()) i];
+var indexes = Array.from(Array(numOfSDContent).keys());
 
 var width = 6;
 var height = 4;
 var testLayout = Array(numOfSDContent);
 
 for (var index of indexes) {
-  testLayout[index] = {"x":index*width,"y":0,"w":width,"h":height,"i":index,"sdi":"smartdown-output"+index};
+  testLayout[index] = {"x":index*width,"y":0,"w":width,"h":height,"i":index.toString(),"sdi":"smartdown-output"+index};
 }
-console.log(testLayout);
+//console.log(testLayout);
 //var testLayout = [
 //    {"x":0,"y":0,"w":2,"h":2,"i":"0","sdi":"smartdown-output0"},
 //    {"x":2,"y":0,"w":2,"h":4,"i":"1","sdi":"smartdown-output1"}
@@ -48,8 +48,8 @@ var GridItem = VueGridLayout.GridItem;
 new Vue({
     el: '#app',
     components: {
-		GridLayout,
-		GridItem
+		    GridLayout,
+		    GridItem
     },
     data: {
         layout: testLayout,
@@ -66,11 +66,10 @@ var svgIcons = {
 
 function smartdownLoaded() {
   console.log('smartdownLoaded... populating DIVs');
-  for (var ind of indexes) {
-    var div = document.getElementById(testSD[ind].i);
-    smartdown.setSmartdown(testSD[ind].text, div);
-  } 
-  
+  for (var index of indexes) {
+    var div = document.getElementById(testLayout[index].sdi);
+    smartdown.setSmartdown(testSD[index].text, div);
+  }
 }
 
 var calcHandlers = null;

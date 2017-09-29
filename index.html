@@ -40,7 +40,7 @@
                          :vertical-compact="true"
                          :use-css-transforms="true"
             >
-                <grid-item v-for="item in layout" v-bind:id="item.i"
+                <grid-item v-for="item in layout" :key="item.i"
                            :x="item.x"
                            :y="item.y"
                            :w="item.w"
