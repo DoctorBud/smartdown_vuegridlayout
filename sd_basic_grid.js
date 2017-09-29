@@ -1,21 +1,17 @@
 
-var SDtext1 = {"text":
+var SDtext1 =
 `
 ### Welcome to Div1
 
 [What is your name?](:?Name)
-`,
-	       "i":"smartdown-output0"
-};
+`;
 
-var SDtext2 = {"text":
+var SDtext2 = 
 `
 ### Welcome to Div2
 
 Pleasant to meet you, [](:!Name)
-`,
-	       "i":"smartdown-output1"
-};
+`;
 
 var testSD = [SDtext1, SDtext2];
 
@@ -48,12 +44,14 @@ var GridItem = VueGridLayout.GridItem;
 new Vue({
     el: '#app',
     components: {
-		    GridLayout,
-		    GridItem
+		  "GridLayout": GridLayout,
+		   "GridItem": GridItem
     },
     data: {
         layout: testLayout,
-        SDcontent: testSD
+        SDcontent: testSD,
+        draggable: true,
+        resizable: true
     },
 });
 
@@ -68,7 +66,7 @@ function smartdownLoaded() {
   console.log('smartdownLoaded... populating DIVs');
   for (var index of indexes) {
     var div = document.getElementById(testLayout[index].sdi);
-    smartdown.setSmartdown(testSD[index].text, div);
+    smartdown.setSmartdown(testSD[index], div);
   }
 }
 
@@ -79,64 +77,6 @@ const linkRules = [
 smartdown.initialize(svgIcons, baseURL, smartdownLoaded, null, calcHandlers, linkRules);
 
 
-/*
-var baseURL = 'https://smartdown.site/';
-var icons = {
-'hypercube': baseURL + '/lib/resources/Hypercube.svg',
-'StalactiteStalagmite': baseURL + '/lib/resources/StalactiteStalagmite.svg',
-'church': baseURL + '/lib/resources/church.svg',
-'lighthouse': baseURL + '/lib/resources/lighthouse.svg',
-'barn': baseURL + '/lib/resources/barn.svg',
-'medieval-gate': baseURL + '/lib/resources/medieval-gate.svg'
-};
-
-var multiparts = {};
-
-function cardLoaded(sourceText, cardKey, cardURL) {
-multiparts = smartdown.partitionMultipart(sourceText);
-var output = document.getElementById('smartdown-output');
-smartdown.setHome(multiparts._default_, output, function() {
-  smartdown.startAutoplay(output);
-  window.location.hash = '#' + cardKey;
-});
-}
-
-function relativeCardLoader(cardKey) {
-var part = multiparts[cardKey];
-if (part) {
-  var output = document.getElementById('smartdown-output');
-  smartdown.setHome(part, output, function() {
-    smartdown.startAutoplay(output);
-  });
-}
-else {
-  var cardURL = window.location.origin + window.location.pathname + cardKey + '.md';
-  if (cardKey.indexOf('http') === 0) {
-    cardURL = cardKey;
-  }
-  var oReq = new XMLHttpRequest();
-  oReq.addEventListener("load", function() {
-    cardLoaded(this.responseText, cardKey, cardURL);
-  });
-  oReq.open("GET", cardURL);
-  oReq.send();
-}
-}
-
-function loadHome() {
-var hash = window.parent.location.hash || window.location.hash;
-if (hash === '') {
-  hash = 'Home';
-}
-hash = hash.replace(/#/g, '');
-relativeCardLoader(hash);
-}
-
-var calcHandlers = smartdown.defaultCalcHandlers;
-const linkRules = [];
-
-smartdown.initialize(icons, baseURL, loadHome, relativeCardLoader, calcHandlers, linkRules);
-*/
 
 /* //additional vue-grid-layout functions
     mounted: function () {
