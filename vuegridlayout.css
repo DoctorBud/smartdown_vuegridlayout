@@ -1,17 +1,52 @@
-/*** EXAMPLE ***/
-#content {
-    width: 100%;
+body {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: auto;
+  border:5px solid green;
 }
 
-.vue-grid-layout {
+div#layoutApp {
+    background: lightyellow;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border:1px solid darkslateblue;
+}
+
+/*** EXAMPLE ***/
+#content {
+    xwidth: 100%;
+    xheight: 100%;
+    border:5px solid orange;
+}
+
+div#layoutApp .vue-grid-layout {
     background: #eee;
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    border:5px solid red;
+}
+
+div#layoutApp .vue-grid-layout .vue-grid-item {
+    background: #eee;
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    border:5px solid aliceblue;
 }
 
 .layoutJSON {
     background: #ddd;
     border: 1px solid black;
-    margin-top: 10px;
-    padding: 10px;
+    position: absolute;
+    bottom: 10px;
+    width: 100%;
+    padding: 5px 15px;
 }
 
 .eventsJSON {
@@ -30,6 +65,9 @@
 }
 
 
+.vue-grid-item {
+    overflow-y: auto;
+}
 
 .vue-resizable-handle {
     z-index: 5000;
@@ -100,3 +138,12 @@
     box-sizing: border-box;
     cursor: pointer;
 }
+
+/* DBK Smartdown additions */
+
+
+
+
+
+
+
