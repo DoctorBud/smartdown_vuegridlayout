@@ -15,6 +15,7 @@
 
     <script src="https://unpkg.com/vue"></script>
     <script src="https://unpkg.com/smartdown/docs/lib/smartdown.js"></script>
+    <script src="https://smartdown.site/lib/smartdown.js"></script>
 </head>
 
 <body>
@@ -22,7 +23,7 @@
         id="layoutApp">
         <grid-layout :layout="layout"
                      :col-num="12"
-                     :row-height="200"
+                     :row-height="rowHeight"
                      :is-draggable="draggable"
                      :is-resizable="resizable"
                      :vertical-compact="true"
@@ -62,7 +63,6 @@
                 </div>
             </div>
 
-        
 
         </div>
     </div>

@@ -90,6 +90,7 @@ var indexes = Array.from(Array(numOfSDContent).keys());
 
 var width = 1;
 var height = 1;
+var gridRowHeight = 200;
 var testLayout = Array(numOfSDContent);
 
 let x = 0;
@@ -117,30 +118,33 @@ var GridItem = VueGridLayout.GridItem;
 new Vue({
 	el: '#layoutApp',
 	components: {
-		  "GridLayout": GridLayout,
-		   "GridItem": GridItem
+		"GridLayout": GridLayout,
+		"GridItem": GridItem
 	},
 	data: {
 		layout: testLayout,
 		SDcontent: testSD,
+		rowHeight: gridRowHeight,
 		draggable: true,
-		resizable: false
+		resizable: true
 	},
 });
 
 
 /* eslint-disable */
 /* global smartdown */
-var baseURL = 'https://127.0.0.1:4000/';    // 'https://smartdown.site/';
+var baseURL = 'https://smartdown.site/'; //'https://127.0.0.1:4000/';
 var svgIcons = {
 };
 
 function smartdownLoaded() {
-  console.log('smartdownLoaded... populating DIVs');
-  for (var index of indexes) {
-	var div = document.getElementById(testLayout[index].sdi);
-	smartdown.setSmartdown(testSD[index], div);
-  }
+	console.log('smartdownLoaded... populating DIVs');
+	for (var index of indexes) {
+		var SDOutputDiv = document.getElementById(testLayout[index].sdi);
+		smartdown.setSmartdown(testSD[index], SDOutputDiv);
+	}
+
+  initMutationObserver();
 }
 
 var calcHandlers = null;
@@ -149,7 +153,55 @@ const linkRules = [
 
 smartdown.initialize(svgIcons, baseURL, smartdownLoaded, null, calcHandlers, linkRules);
 
+function initMutationObserver() {
+	var target = document.querySelector('.vue-grid-layout');
 
+	var observer = new MutationObserver(function(mutations) {
+	  mutations.forEach(function(mutation) {
+	    // console.log(mutation.type);
+	    if (mutation.type == "childList" &&
+	    	mutation.target.className == "no-drag smartdown-container" &&
+	    	mutation.addedNodes.length != 0) {
+	    	// console.log(mutation.type, mutation.target.className, mutation.addedNodes.length);
+	    	var SDInnerDiv = mutation.addedNodes[0]; // mutation.target.firstchild // !This firstchild kept coming back as undefined;
+	    	var SDHeight = SDInnerDiv.clientHeight;
+	    	var numRows = Math.ceil(SDHeight / gridRowHeight);
+	    	// console.log(SDInnerDiv, numRows);
+	    	var SDParentId= SDInnerDiv.parentElement.id
+	    	var index = SDParentId.substr(SDParentId.length - 1)
+	    	testLayout[index].h = numRows;
+	    }
+	   	else {
+	   		console.log('Nothing added to' + mutation.target.className);
+	    }
+	   });
+
+  	});
+
+
+	var config = {
+			attributes: false,
+			childList: true,
+			subtree: true,
+			characterData: false
+		}
+
+	observer.observe(target, config);
+}
+
+
+/*
+function updateSDHeight() {
+	var SDContainerDivList = document.querySelectorAll('.smartdown-container');
+	console.log(SDContainerDivList);
+	SDContainerDivList.forEach(function(currentValue, currentIndex, listObj) {
+		var SDInnerDiv = currentValue.firstchild;
+		var SDHeight = SDInnerDiv.clientHeight;
+		var numRows = Math.ceil(SDHeight / rowHeight); // Round this up to int
+		testLayout[i].h = numRows;
+	});
+}
+*/
 
 /* //additional vue-grid-layout functions
 	mounted: function () {
