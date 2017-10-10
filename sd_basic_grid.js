@@ -91,13 +91,12 @@ var indexes = Array.from(Array(numOfSDContent).keys());
 var width = 1;
 var height = 1;
 var gridRowHeight = 100;
-var testLayout = Array(numOfSDContent);
+var rowOrientedLayout = Array(numOfSDContent);
 
 let x = 0;
-
 for (var index of indexes) {
 	let w = width * 2 * (index + 1);
-  testLayout[index] = {
+  rowOrientedLayout[index] = {
   	"x": x,
   	"y": 0,
   	"w": w,
@@ -107,6 +106,8 @@ for (var index of indexes) {
   };
   x += w;
 }
+
+// var testLayout = Object.assign({}, rowOrientedLayout); 
 
 Vue.config.debug = true;
 Vue.config.devtools = true;
@@ -122,12 +123,44 @@ new Vue({
 		"GridItem": GridItem
 	},
 	data: {
-		layout: testLayout,
+		layout: rowOrientedLayout,
 		SDcontent: testSD,
 		rowHeight: gridRowHeight,
 		draggable: true,
 		resizable: true
 	},
+        methods: { 
+	  switchToColumnLayout: function() {
+	                          var self = this;
+	                          //console.log("Switching to column layout");
+	                          var newLayout = Array(numOfSDContent);
+	                          for (var index = 0; 
+				       index < this.layout.length; 
+				       index++) 
+	                          { 
+				    newLayout[index] = {       
+				      "x": 0,
+				      "w": this.layout[index].w,
+				      "h": this.layout[index].h,
+				      "i": this.layout[index].i,
+				      "sdi": this.layout[index].sdi
+				    }
+				    if (index == 0) {
+				      newLayout[index].y = 0;
+				    }  
+				    else {
+				      newLayout[index].y = this.layout[index-1].h
+					+this.layout[index-1].y;
+				    }
+				  }
+	                          this.layout = newLayout;
+	                        },
+	  switchToRowLayout: function() {
+	                       console.log("Switching to row layout");
+	                       var self = this;
+	                       this.layout = rowOrientedLayout; 
+	                     }
+	}
 });
 
 
@@ -140,7 +173,7 @@ var svgIcons = {
 function smartdownLoaded() {
 	console.log('smartdownLoaded... populating DIVs');
 	for (var index of indexes) {
-		var SDOutputDiv = document.getElementById(testLayout[index].sdi);
+		var SDOutputDiv = document.getElementById(rowOrientedLayout[index].sdi);
 		smartdown.setSmartdown(testSD[index], SDOutputDiv);
 	}
 
@@ -169,7 +202,7 @@ function initMutationObserver() {
 	    	// console.log(SDInnerDiv, numRows);
 	    	var SDParentId= SDInnerDiv.parentElement.id
 	    	var index = SDParentId.substr(SDParentId.length - 1)
-	    	testLayout[index].h = numRows;
+	    	rowOrientedLayout[index].h = numRows;
 	    }
 	   	else {
 	   		console.log('Nothing added to' + mutation.target.className);
@@ -198,7 +231,7 @@ function updateSDHeight() {
 		var SDInnerDiv = currentValue.firstchild;
 		var SDHeight = SDInnerDiv.clientHeight;
 		var numRows = Math.ceil(SDHeight / rowHeight); // Round this up to int
-		testLayout[i].h = numRows;
+		rowOrientedLayout[i].h = numRows;
 	});
 }
 */

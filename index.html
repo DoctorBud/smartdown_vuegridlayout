@@ -44,8 +44,9 @@
 
         <hr>
 
-
         <div class="layoutJSON">
+	    <button v-on:click="switchToColumnLayout">Switch To column-layout</button>
+	    <button v-on:click="switchToRowLayout">Switch To row-layout</button>
             <input type="checkbox" v-model="draggable"/> Draggable
             <input type="checkbox" v-model="resizable"/> Resizable
             <div class="pull-right">
