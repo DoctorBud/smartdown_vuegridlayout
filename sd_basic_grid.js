@@ -90,7 +90,7 @@ var indexes = Array.from(Array(numOfSDContent).keys());
 
 var width = 1;
 var height = 1;
-var gridRowHeight = 200;
+var gridRowHeight = 100;
 var testLayout = Array(numOfSDContent);
 
 let x = 0;
