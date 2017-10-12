@@ -1,4 +1,3 @@
-
 var SDtext1 =
 `
 ### Welcome to Div1
@@ -65,16 +64,16 @@ p5.draw = function() {
   p5.rotateZ(az += dz);
 
   for (var i = 0; i < SEGMENTS; i++) {
-	var frac = i * 2 / SEGMENTS;
-	p5.push();
-	p5.rotateX(frac * HALF_PI);
-	p5.rotateY(HALF_PI);
-	p5.translate(
-		0,
-		DIAMETER * p5.cos(frac * HALF_PI),
-		DIAMETER * p5.sin(frac * PI));
-	p5.cylinder(SEG_WIDTH, SEG_LENGTH);
-	p5.pop();
+    var frac = i * 2 / SEGMENTS;
+    p5.push();
+    p5.rotateX(frac * HALF_PI);
+    p5.rotateY(HALF_PI);
+    p5.translate(
+        0,
+        DIAMETER * p5.cos(frac * HALF_PI),
+        DIAMETER * p5.sin(frac * PI));
+    p5.cylinder(SEG_WIDTH, SEG_LENGTH);
+    p5.pop();
   }
 };
 \`\`\`
@@ -83,31 +82,10 @@ p5.draw = function() {
 `;
 
 var testSD = [SDtext1, SDtext2, SDtext3];
-
 var numOfSDContent = testSD.length;
 
-var indexes = Array.from(Array(numOfSDContent).keys());
 
-var width = 1;
-var height = 1;
-var gridRowHeight = 100;
-var rowOrientedLayout = Array(numOfSDContent);
-
-let x = 0;
-for (var index of indexes) {
-	let w = width * 2 * (index + 1);
-  rowOrientedLayout[index] = {
-  	"x": x,
-  	"y": 0,
-  	"w": w,
-  	"h": height,
-  	"i": index.toString(),
-  	"sdi":"smartdown-output" + index
-  };
-  x += w;
-}
-
-// var testLayout = Object.assign({}, rowOrientedLayout); 
+// var testLayout = Object.assign({}, rowOrientedLayout);
 
 Vue.config.debug = true;
 Vue.config.devtools = true;
@@ -115,53 +93,121 @@ Vue.config.devtools = true;
 var GridLayout = VueGridLayout.GridLayout;
 var GridItem = VueGridLayout.GridItem;
 
-/*global Vue*/
-new Vue({
-	el: '#layoutApp',
-	components: {
-		"GridLayout": GridLayout,
-		"GridItem": GridItem
-	},
-	data: {
-		layout: rowOrientedLayout,
-		SDcontent: testSD,
-		rowHeight: gridRowHeight,
-		draggable: true,
-		resizable: true
-	},
-        methods: { 
-	  switchToColumnLayout: function() {
-	                          var self = this;
-	                          //console.log("Switching to column layout");
-	                          var newLayout = Array(numOfSDContent);
-	                          for (var index = 0; 
-				       index < this.layout.length; 
-				       index++) 
-	                          { 
-				    newLayout[index] = {       
-				      "x": 0,
-				      "w": this.layout[index].w,
-				      "h": this.layout[index].h,
-				      "i": this.layout[index].i,
-				      "sdi": this.layout[index].sdi
-				    }
-				    if (index == 0) {
-				      newLayout[index].y = 0;
-				    }  
-				    else {
-				      newLayout[index].y = this.layout[index-1].h
-					+this.layout[index-1].y;
-				    }
-				  }
-	                          this.layout = newLayout;
-	                        },
-	  switchToRowLayout: function() {
-	                       console.log("Switching to row layout");
-	                       var self = this;
-	                       this.layout = rowOrientedLayout; 
-	                     }
-	}
-});
+var gridView = null;
+const defaultRowHeight = 100;
+
+function buildColumnLayout(numColumns) {
+  var width = 1;
+  var height = 1;
+  var layout = Array(numColumns);
+  let x = 0;
+
+  for (var index = 0; index < numColumns; index++) {
+    let w = width * 2 * (index + 1);
+    layout[index] = {
+      "x": x,
+      "y": 0,
+      "w": w,
+      "h": height,
+      "i": index.toString(),
+      "divID": "smartdown-output" + index
+    };
+
+    x += w;
+  }
+
+  return layout;
+}
+
+
+function buildRowLayout(numRows) {
+  //console.log("Switching to row layout");
+  var width = 12;
+  var height = 1;
+  var layout = Array(numRows);
+  let y = 0;
+  for (var index = 0; index < numRows; index++) {
+    let h = height + index;
+    layout[index] = {
+      "x": 0,
+      "y": y,
+      "w": width,
+      "h": h,
+      "i": index.toString(),
+      "divID": "smartdown-output" + index
+    };
+    y += h;
+  }
+
+  return layout;
+}
+
+
+function applySmartdown(layout, contentItems) {
+  console.log('applySmartdown', layout);
+
+  if (contentItems.length !== layout.length) {
+    console.log('applySmartdown ERROR ... numOfSDContent !== layout.length', numOfSDContent, layout.length);
+  }
+  else {
+    layout.forEach(function(layoutElement, layoutElementIndex) {
+      var divID = layoutElement.divID;
+      var div = document.getElementById(divID);
+      if (!div) {
+        console.log('applySmartdown ERROR ... div not found:', divID);
+      }
+      else {
+        var content = contentItems[layoutElementIndex];
+        // div.innerHTML = content;
+        smartdown.setSmartdown(content, div, function() {
+          var firstChildDiv = div.children[0];
+          var contentPrefix = content.slice(0, 30);
+          console.log('## Adjust this cell height', layoutElement, divID, contentPrefix, div, firstChildDiv, div.clientHeight, firstChildDiv.clientHeight);
+          console.log('  #### current height: ', div.clientHeight, ' ... desired height: ', firstChildDiv.clientHeight);
+        })
+      }
+    });
+  }
+}
+
+
+function buildView(layout, gridRowHeight, draggable, resizable) {
+  /*global Vue*/
+  var view = new Vue({
+      el: '#layoutApp',
+      created: function () {
+        // `this` points to the vm instance
+        console.log('created... data', this);
+
+        // stretchItems(this, this.layout);
+      },
+      components: {
+          "GridLayout": GridLayout,
+          "GridItem": GridItem
+      },
+      data: {
+          layout: layout,
+          rowHeight: gridRowHeight,
+          draggable: draggable,
+          resizable: resizable
+      },
+      methods: {
+        switchToColumnLayout: function() {
+          this.layout = buildColumnLayout(numOfSDContent, defaultRowHeight);
+        },
+
+        switchToRowLayout: function() {
+          this.layout = buildRowLayout(numOfSDContent);
+        },
+
+        applySmartdown: function() {
+          applySmartdown(this.layout, testSD);
+        }
+      }
+  });
+
+  return view;
+}
 
 
 /* eslint-disable */
@@ -171,13 +217,15 @@ var svgIcons = {
 };
 
 function smartdownLoaded() {
-	console.log('smartdownLoaded... populating DIVs');
-	for (var index of indexes) {
-		var SDOutputDiv = document.getElementById(rowOrientedLayout[index].sdi);
-		smartdown.setSmartdown(testSD[index], SDOutputDiv);
-	}
+    console.log('smartdownLoaded... populating DIVs');
+  //   for (var index of indexes) {
+  //       var SDOutputDiv = document.getElementById(rowOrientedLayout[index].sdi);
+  //       smartdown.setSmartdown(testSD[index], SDOutputDiv);
+  //   }
+  var layout = buildColumnLayout(testSD.length, defaultRowHeight);
+  gridView = buildView(layout, defaultRowHeight, true, true);
 
-  initMutationObserver();
+  // initMutationObserver();
 }
 
 var calcHandlers = null;
@@ -186,84 +234,84 @@ const linkRules = [
 
 smartdown.initialize(svgIcons, baseURL, smartdownLoaded, null, calcHandlers, linkRules);
 
-function initMutationObserver() {
-	var target = document.querySelector('.vue-grid-layout');
-
-	var observer = new MutationObserver(function(mutations) {
-	  mutations.forEach(function(mutation) {
-	    // console.log(mutation.type);
-	    if (mutation.type == "childList" &&
-	    	mutation.target.className == "no-drag smartdown-container" &&
-	    	mutation.addedNodes.length != 0) {
-	    	// console.log(mutation.type, mutation.target.className, mutation.addedNodes.length);
-	    	var SDInnerDiv = mutation.addedNodes[0]; // mutation.target.firstchild // !This firstchild kept coming back as undefined;
-	    	var SDHeight = SDInnerDiv.clientHeight;
-	    	var numRows = Math.ceil(SDHeight / gridRowHeight);
-	    	// console.log(SDInnerDiv, numRows);
-	    	var SDParentId= SDInnerDiv.parentElement.id
-	    	var index = SDParentId.substr(SDParentId.length - 1)
-	    	rowOrientedLayout[index].h = numRows;
-	    }
-	   	else {
-	   		console.log('Nothing added to' + mutation.target.className);
-	    }
-	   });
-
-  	});
 
 
-	var config = {
-			attributes: false,
-			childList: true,
-			subtree: true,
-			characterData: false
-		}
+/* additional vue-grid-layout functions that might be useful
+  mounted: function () {
+      this.index = this.layout.length;
+  },
+  methods: {
+      increaseWidth: function(item) {
+          var width = document.getElementById("content").offsetWidth;
+          width += 20;
+          document.getElementById("content").style.width = width+"px";
+      },
+      decreaseWidth: function(item) {
 
-	observer.observe(target, config);
-}
-
-
-/*
-function updateSDHeight() {
-	var SDContainerDivList = document.querySelectorAll('.smartdown-container');
-	console.log(SDContainerDivList);
-	SDContainerDivList.forEach(function(currentValue, currentIndex, listObj) {
-		var SDInnerDiv = currentValue.firstchild;
-		var SDHeight = SDInnerDiv.clientHeight;
-		var numRows = Math.ceil(SDHeight / rowHeight); // Round this up to int
-		rowOrientedLayout[i].h = numRows;
-	});
-}
-*/
-
-/* //additional vue-grid-layout functions
-	mounted: function () {
-		this.index = this.layout.length;
-	},
-	methods: {
-		increaseWidth: function(item) {
-			var width = document.getElementById("content").offsetWidth;
-			width += 20;
-			document.getElementById("content").style.width = width+"px";
-		},
-		decreaseWidth: function(item) {
-
-			var width = document.getElementById("content").offsetWidth;
-			width -= 20;
-			document.getElementById("content").style.width = width+"px";
-		},
-		removeItem: function(item) {
-			//console.log("### REMOVE " + item.i);
-			this.layout.splice(this.layout.indexOf(item), 1);
-		},
-		addItem: function() {
-			var self = this;
-			//console.log("### LENGTH: " + this.layout.length);
-			var item = {"x":0,"y":0,"w":2,"h":2,"i":this.index+"", whatever: "bbb"};
-			this.index++;
-			this.layout.push(item);
-		}
-	}
+          var width = document.getElementById("content").offsetWidth;
+          width -= 20;
+          document.getElementById("content").style.width = width+"px";
+      },
+      removeItem: function(item) {
+          //console.log("### REMOVE " + item.i);
+          this.layout.splice(this.layout.indexOf(item), 1);
+      },
+      addItem: function() {
+          var self = this;
+          //console.log("### LENGTH: " + this.layout.length);
+          var item = {"x":0,"y":0,"w":2,"h":2,"i":this.index+"", whatever: "bbb"};
+          this.index++;
+          this.layout.push(item);
+      }
+  }
 */
 
 
+/***** Leftovers to be deleted after the essential height calculation is extracted.
+  function initMutationObserver() {
+      var target = document.querySelector('.vue-grid-layout');
+
+      var observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+          // console.log(mutation.type);
+          if (mutation.type == "childList" &&
+              mutation.target.className == "no-drag smartdown-container" &&
+              mutation.addedNodes.length != 0) {
+              // console.log(mutation.type, mutation.target.className, mutation.addedNodes.length);
+              var SDInnerDiv = mutation.addedNodes[0]; // mutation.target.firstchild // !This firstchild kept coming back as undefined;
+              var SDHeight = SDInnerDiv.clientHeight;
+              var numRows = Math.ceil(SDHeight / gridRowHeight);
+              // console.log(SDInnerDiv, numRows);
+              var SDParentId= SDInnerDiv.parentElement.id
+              var index = SDParentId.substr(SDParentId.length - 1)
+              rowOrientedLayout[index].h = numRows;
+          }
+          else {
+              console.log('Nothing added to' + mutation.target.className);
+          }
+         });
+
+      });
+
+
+      var config = {
+              attributes: false,
+              childList: true,
+              subtree: true,
+              characterData: false
+          }
+
+      observer.observe(target, config);
+  }
+
+  function updateSDHeight() {
+      var SDContainerDivList = document.querySelectorAll('.smartdown-container');
+      console.log(SDContainerDivList);
+      SDContainerDivList.forEach(function(currentValue, currentIndex, listObj) {
+          var SDInnerDiv = currentValue.firstchild;
+          var SDHeight = SDInnerDiv.clientHeight;
+          var numRows = Math.ceil(SDHeight / rowHeight); // Round this up to int
+          rowOrientedLayout[i].h = numRows;
+      });
+  }
+*/

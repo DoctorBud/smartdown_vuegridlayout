@@ -13,8 +13,8 @@
     <!-- Optional theme -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
 
-    <script src="https://unpkg.com/vue"></script>
-    <script src="https://unpkg.com/smartdown/docs/lib/smartdown.js"></script>
+    <script src="https://unpkg.com/vue/dist/vue.min.js"></script>
+
     <script src="https://smartdown.site/lib/smartdown.js"></script>
 </head>
 
@@ -37,7 +37,7 @@
                        drag-allow-from=".vue-draggable-handle"
                        drag-ignore-from=".no-drag">
                 <div class="vue-draggable-handle"></div>
-                <div class="no-drag smartdown-container" v-bind:id="item.sdi">
+                <div class="no-drag smartdown-container" v-bind:id="item.divID">
                 </div>
             </grid-item>
         </grid-layout>
@@ -45,8 +45,9 @@
         <hr>
 
         <div class="layoutJSON">
-	    <button v-on:click="switchToColumnLayout">Switch To column-layout</button>
-	    <button v-on:click="switchToRowLayout">Switch To row-layout</button>
+        <button v-on:click="switchToColumnLayout">Switch To column-layout</button>
+        <button v-on:click="switchToRowLayout">Switch To row-layout</button>
+        <button v-on:click="applySmartdown">Apply Content</button>
             <input type="checkbox" v-model="draggable"/> Draggable
             <input type="checkbox" v-model="resizable"/> Resizable
             <div class="pull-right">
