@@ -95,38 +95,41 @@ var GridItem = VueGridLayout.GridItem;
 
 var gridView = null;
 const defaultRowHeight = 100;
+const numColumns = 12;
+const vueAppDivId = 'layoutApp';
 
-function buildColumnLayout(numColumns) {
-  var width = 1;
+
+function buildColumnLayout(numOfSDContent, numCols) {
+  var width = numCols / numOfSDContent;
   var height = 1;
-  var layout = Array(numColumns);
+  var layout = Array(numOfSDContent);
   let x = 0;
 
-  for (var index = 0; index < numColumns; index++) {
-    let w = width * 2 * (index + 1);
+  for (var index = 0; index < numOfSDContent; index++) {
+    //let w = width * 2 * (index + 1);
     layout[index] = {
       "x": x,
       "y": 0,
-      "w": w,
+      "w": width,
       "h": height,
       "i": index.toString(),
       "divID": "smartdown-output" + index
     };
 
-    x += w;
+    x += width;
   }
 
   return layout;
 }
 
 
-function buildRowLayout(numRows) {
+function buildRowLayout(numOfSDContent, numCols) {
   //console.log("Switching to row layout");
-  var width = 12;
+  var width = numCols;
   var height = 1;
-  var layout = Array(numRows);
+  var layout = Array(numOfSDContent);
   let y = 0;
-  for (var index = 0; index < numRows; index++) {
+  for (var index = 0; index < numOfSDContent; index++) {
     let h = height + index;
     layout[index] = {
       "x": 0,
@@ -142,6 +145,25 @@ function buildRowLayout(numRows) {
   return layout;
 }
 
+function optimizeSDGridCellHeight(layout) {
+  layout.forEach(function(layoutElement, layoutElementIndex) {
+    var divID = layoutElement.divID;
+    var SDGridCellDiv = document.getElementById(divID);
+    var SDInnerContainer = SDGridCellDiv.children[0];
+    if (!SDInnerContainer) {
+      console.log('Error when adjusting Smartdown container grid height: need to populate SD content first!');
+    }
+    else {
+      var divHeight = SDGridCellDiv.clientHeight;
+      var SDHeight = SDInnerContainer.clientHeight;
+      var newHeight = Math.ceil(SDHeight / divHeight);
+      layoutElement.h = newHeight;
+      if (layoutElement.y !== 0) {
+        layoutElement.y = layout[layoutElementIndex-1].y + layout[layoutElementIndex-1].h;
+      }
+    }
+  });
+}
 
 function applySmartdown(layout, contentItems) {
   console.log('applySmartdown', layout);
@@ -159,22 +181,30 @@ function applySmartdown(layout, contentItems) {
       else {
         var content = contentItems[layoutElementIndex];
         // div.innerHTML = content;
-        smartdown.setSmartdown(content, div, function() {
-          var firstChildDiv = div.children[0];
-          var contentPrefix = content.slice(0, 30);
-          console.log('## Adjust this cell height', layoutElement, divID, contentPrefix, div, firstChildDiv, div.clientHeight, firstChildDiv.clientHeight);
-          console.log('  #### current height: ', div.clientHeight, ' ... desired height: ', firstChildDiv.clientHeight);
-        })
+        smartdown.setSmartdown(content, div);
       }
     });
   }
 }
 
+/*
+function() {
+          var firstChildDiv = div.children[0];
+          //var contentPrefix = content.slice(0, 30);
+          //console.log('## Adjust this cell height', layoutElement, divID, contentPrefix, div, firstChildDiv, div.clientHeight, firstChildDiv.clientHeight);
+          //console.log('  #### current height: ', div.clientHeight, ' ... desired height: ', firstChildDiv.clientHeight);
+          var divHeight = div.clientHeight;
+          var SDHeight = firstChildDiv.clientHeight;
+          var numRows = Math.ceil(SDHeight / divHeight);
+          layoutElement.h = numRows;
+}
+*/
 
-function buildView(layout, gridRowHeight, draggable, resizable) {
+
+function buildView(divId, layout, numCols, gridRowHeight, draggable, resizable) {
   /*global Vue*/
   var view = new Vue({
-      el: '#layoutApp',
+      el: '#'+divId,
       created: function () {
         // `this` points to the vm instance
         console.log('created... data', this);
@@ -188,21 +218,25 @@ function buildView(layout, gridRowHeight, draggable, resizable) {
       data: {
           layout: layout,
           rowHeight: gridRowHeight,
+          numCols: numCols,
           draggable: draggable,
           resizable: resizable
       },
       methods: {
         switchToColumnLayout: function() {
-          this.layout = buildColumnLayout(numOfSDContent, defaultRowHeight);
+          this.layout = buildColumnLayout(numOfSDContent, numCols);
         },
 
         switchToRowLayout: function() {
-          this.layout = buildRowLayout(numOfSDContent);
+          this.layout = buildRowLayout(numOfSDContent, numCols);
         },
 
         applySmartdown: function() {
           applySmartdown(this.layout, testSD);
-        }
+        },
+        optimizeSDGridCellHeight: function() {
+          optimizeSDGridCellHeight(this.layout);
+        },
       }
   });
 
@@ -222,8 +256,8 @@ function smartdownLoaded() {
   //       var SDOutputDiv = document.getElementById(rowOrientedLayout[index].sdi);
   //       smartdown.setSmartdown(testSD[index], SDOutputDiv);
   //   }
-  var layout = buildColumnLayout(testSD.length, defaultRowHeight);
-  gridView = buildView(layout, defaultRowHeight, true, true);
+  var layout = buildColumnLayout(testSD.length, numColumns);
+  gridView = buildView(vueAppDivId, layout, numColumns, defaultRowHeight, true, true);
 
   // initMutationObserver();
 }

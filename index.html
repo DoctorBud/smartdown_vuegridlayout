@@ -22,7 +22,7 @@
     <div
         id="layoutApp">
         <grid-layout :layout="layout"
-                     :col-num="12"
+                     :col-num="numCols"
                      :row-height="rowHeight"
                      :is-draggable="draggable"
                      :is-resizable="resizable"
@@ -45,9 +45,10 @@
         <hr>
 
         <div class="layoutJSON">
-        <button v-on:click="switchToColumnLayout">Switch To column-layout</button>
-        <button v-on:click="switchToRowLayout">Switch To row-layout</button>
         <button v-on:click="applySmartdown">Apply Content</button>
+        <button v-on:click="switchToColumnLayout">Switch To Column-layout</button>
+        <button v-on:click="switchToRowLayout">Switch To Row-layout</button>
+        <button v-on:click="optimizeSDGridCellHeight">Adjust SD Cell Height</button>
             <input type="checkbox" v-model="draggable"/> Draggable
             <input type="checkbox" v-model="resizable"/> Resizable
             <div class="pull-right">
