@@ -28,7 +28,8 @@ div#layoutApp .vue-grid-layout {
     background: #eee;
     margin: 0;
     width: 100%;
-    height: 100%;
+    top: 5%;
+    height: 95%;
     border:5px solid red;
 }
 
@@ -40,11 +41,12 @@ div#layoutApp .vue-grid-layout .vue-grid-item {
     border:5px solid aliceblue;
 }
 
-.layoutJSON {
+div#layoutApp .layoutJSON {
     background: #ddd;
     border: 1px solid black;
     position: absolute;
-    bottom: 10px;
+    top: 5px;
+    height: 10%;
     width: 100%;
     padding: 5px 15px;
 }
