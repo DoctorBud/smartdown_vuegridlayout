@@ -28,8 +28,8 @@ div#layoutApp .vue-grid-layout {
     background: #eee;
     margin: 0;
     width: 100%;
-    top: 5%;
-    height: 95%;
+    top: 10%;
+    height: 90%;
     border:5px solid red;
 }
 
