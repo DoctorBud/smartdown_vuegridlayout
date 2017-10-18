@@ -18,6 +18,30 @@ div#layoutApp {
 }
 
 /*** EXAMPLE ***/
+div#layoutApp .layoutJSON {
+    background: #ddd;
+    border: 1px solid black;
+    position: absolute;
+    top: 5px;
+    min-height: 10%;
+    width: 100%;
+    padding: 5px 15px;
+}
+
+.columns {
+    -moz-columns: 120px;
+    -webkit-columns: 120px;
+    columns: 120px;
+}
+
+input #sdSelection {
+    border: 2px solid yellow;
+    position: relative;
+    top: 150px;
+    height: 50px;
+    width: 50%;
+}
+
 #content {
     xwidth: 100%;
     xheight: 100%;
@@ -25,10 +49,11 @@ div#layoutApp {
 }
 
 div#layoutApp .vue-grid-layout {
+    position: relative;
     background: #eee;
     margin: 0;
     width: 100%;
-    top: 10%;
+    top: 15%;
     height: 90%;
     border:5px solid red;
 }
@@ -40,23 +65,6 @@ div#layoutApp .vue-grid-layout .vue-grid-item {
     height: 100%;
     border:5px solid aliceblue;
 }
-
-div#layoutApp .layoutJSON {
-    background: #ddd;
-    border: 1px solid black;
-    position: absolute;
-    top: 5px;
-    height: 10%;
-    width: 100%;
-    padding: 5px 15px;
-}
-
-.columns {
-    -moz-columns: 120px;
-    -webkit-columns: 120px;
-    columns: 120px;
-}
-
 
 .vue-grid-item {
     overflow-y: auto;
