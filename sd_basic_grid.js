@@ -1,4 +1,4 @@
-/*
+
 var SDtext1 =
 `
 ### Welcome to Div1
@@ -81,13 +81,16 @@ p5.draw = function() {
 
 
 `;
-*/
 
-function updateSdSelection(sdContent) {
+// Initialize with some placeholder Smartdown content for testing, later can render user selected content
+var testSD = [SDtext1, SDtext2, SDtext3];
+var numOfInitialSDContent = testSD.length;
+
+function updateSdSelection() {
   // !This is bad, how is a method within a view to know about DOM elements?!
   var selectedFiles = document.getElementById('sdSelection').files;
   console.log(selectedFiles);
-
+  var sdContent = new Array(selectedFiles.length); 
   function updateSdContent(sdContent, index) {
     return function(event) {
       var sdText = event.target.result;
@@ -212,19 +215,6 @@ function applySmartdown(layout, contentItems) {
   }
 }
 
-/*
-function() {
-          var firstChildDiv = div.children[0];
-          //var contentPrefix = content.slice(0, 30);
-          //console.log('## Adjust this cell height', layoutElement, divID, contentPrefix, div, firstChildDiv, div.clientHeight, firstChildDiv.clientHeight);
-          //console.log('  #### current height: ', div.clientHeight, ' ... desired height: ', firstChildDiv.clientHeight);
-          var divHeight = div.clientHeight;
-          var SDHeight = firstChildDiv.clientHeight;
-          var numRows = Math.ceil(SDHeight / divHeight);
-          layoutElement.h = numRows;
-}
-*/
-
 
 function buildView(divId, layout, sdContent=[], numCols=12, gridRowHeight=200, draggable=true, resizable=true) {
   /*global Vue*/
@@ -255,8 +245,8 @@ function buildView(divId, layout, sdContent=[], numCols=12, gridRowHeight=200, d
       },
       watch: {
         numOfSDContent: function(newNumOfSDContent) {
-          //this.switchToColumnLayout();
-          console.log('numOfSDContent changed')
+          console.log('numOfSDContent changed');
+	  this.switchToColumnLayout();
         }
       },
       methods: {
@@ -275,7 +265,7 @@ function buildView(divId, layout, sdContent=[], numCols=12, gridRowHeight=200, d
           optimizeSDGridCellHeight(this.layout);
         },
 	      updateSdSelection: function() {
-	        this.sdContent = updateSdSelection(this.sdContent);
+	        this.sdContent = updateSdSelection();
 	      },
       }
   });
@@ -296,8 +286,8 @@ function smartdownLoaded() {
   //       var SDOutputDiv = document.getElementById(rowOrientedLayout[index].sdi);
   //       smartdown.setSmartdown(sdContent[index], SDOutputDiv);
   //   }
-  var layout = buildColumnLayout(sdContent.length, numColumns);
-  gridView = buildView(vueAppDivId, layout);
+  var layout = buildColumnLayout(numOfInitialSDContent, numColumns);
+  gridView = buildView(vueAppDivId, layout, testSD);
 
   // initMutationObserver();
 }

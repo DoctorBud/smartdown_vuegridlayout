@@ -1,7 +1,7 @@
 ### Welcome to Div3
 
 
-\`\`\`p5js/playable
+```p5js/playable
 var PI = Math.PI;
 var HALF_PI = PI / 2.0;
 var SEGMENTS = env.SEGMENTS || 50;  // number of segments
@@ -44,4 +44,4 @@ p5.draw = function() {
     p5.pop();
   }
 };
-\`\`\`
+```
