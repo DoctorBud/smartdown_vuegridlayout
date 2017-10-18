@@ -84,28 +84,29 @@ p5.draw = function() {
 */
 
 function updateSdSelection(sdContent) {
-  var newSdContent = [];
   // !This is bad, how is a method within a view to know about DOM elements?!
   var selectedFiles = document.getElementById('sdSelection').files;
   console.log(selectedFiles);
-  
-  for (var file of selectedFiles) {
-    var reader = new FileReader();
-    reader.readAsText(file);
-    console.log(reader);
-    reader.onload = function() { 
-      var SDtext = reader.result;
-      console.log(SDtext);
-      newSdContent.push(SDtext);
-      console.log(sdContent);
+
+  function updateSdContent(sdContent, index) {
+    return function(event) {
+      var sdText = event.target.result;
+      // console.log(index, sdText);
+      sdContent[index] = sdText;
     };
   }
-  sdContent = newSdContent;
+
+  for (var indexOfFile = 0; indexOfFile < selectedFiles.length; indexOfFile++) {
+    var reader = new FileReader();
+    reader.onloadend = updateSdContent(sdContent, indexOfFile);
+    reader.readAsText(selectedFiles[indexOfFile]);
+  }
+  return sdContent;
 }
 
-var sdContent = ['1','2','3']; // This is a place holder
+var sdContent = []; // This is a place holder
 //var sdContent = [SDtext1, SDtext2, SDtext3];
-var numOfSDContent = sdContent.length;
+//var numOfSDContent = sdContent.length;
 
 
 Vue.config.debug = true;
@@ -188,8 +189,11 @@ function optimizeSDGridCellHeight(layout) {
 
 function applySmartdown(layout, contentItems) {
   console.log('applySmartdown', layout);
-
-  if (contentItems.length !== layout.length) {
+  if (contentItems.length == 0) {
+    console.log('No smartdown content, please select smartdown files to display!')
+  }
+  else if (contentItems.length !== layout.length) {
+    var numOfSDContent = contentItems.length;
     console.log('applySmartdown ERROR ... numOfSDContent !== layout.length', numOfSDContent, layout.length);
   }
   else {
@@ -222,7 +226,7 @@ function() {
 */
 
 
-function buildView(divId, numOfSDContent, layout, sdContent, numCols, gridRowHeight, draggable, resizable) {
+function buildView(divId, layout, sdContent=[], numCols=12, gridRowHeight=200, draggable=true, resizable=true) {
   /*global Vue*/
   var view = new Vue({
       el: '#'+divId,
@@ -233,18 +237,27 @@ function buildView(divId, numOfSDContent, layout, sdContent, numCols, gridRowHei
         // stretchItems(this, this.layout);
       },
       components: {
-          "GridLayout": GridLayout,
-          "GridItem": GridItem
+        "GridLayout": GridLayout,
+        "GridItem": GridItem
       },
       data: {
-          layout: layout,
-	  numOfSDContent: numOfSDContent,
-          rowHeight: gridRowHeight,
-          numCols: numCols,
-	  fileList: [],
-	  sdContent: sdContent,
-          draggable: draggable,
-          resizable: resizable
+        layout: layout,
+        rowHeight: gridRowHeight,
+        numCols: numCols,
+      	sdContent: sdContent,
+        draggable: draggable,
+        resizable: resizable
+      },
+      computed: {
+        numOfSDContent: function() {
+          return this.sdContent.length;
+        }
+      },
+      watch: {
+        numOfSDContent: function(newNumOfSDContent) {
+          //this.switchToColumnLayout();
+          console.log('numOfSDContent changed')
+        }
       },
       methods: {
         switchToColumnLayout: function() {
@@ -261,9 +274,9 @@ function buildView(divId, numOfSDContent, layout, sdContent, numCols, gridRowHei
         optimizeSDGridCellHeight: function() {
           optimizeSDGridCellHeight(this.layout);
         },
-	updateSdSelection: function() {
-	  updateSdSelection(this.sdContent);
-	},
+	      updateSdSelection: function() {
+	        this.sdContent = updateSdSelection(this.sdContent);
+	      },
       }
   });
 
@@ -284,7 +297,7 @@ function smartdownLoaded() {
   //       smartdown.setSmartdown(sdContent[index], SDOutputDiv);
   //   }
   var layout = buildColumnLayout(sdContent.length, numColumns);
-  gridView = buildView(vueAppDivId, numOfSDContent, layout, sdContent, numColumns, defaultRowHeight, true, true);
+  gridView = buildView(vueAppDivId, layout);
 
   // initMutationObserver();
 }
