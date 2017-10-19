@@ -226,6 +226,18 @@ function buildView(divId, layout, sdContent=[], numCols=12, gridRowHeight=200, d
 
         // stretchItems(this, this.layout);
       },
+      mounted: function() {
+        this.$nextTick(function () {
+          var resizeHandles = this.$el.querySelectorAll('span.vue-resizable-handle');
+          console.log('resizeHandles', resizeHandles);
+          resizeHandles.forEach(function(element) {
+            console.log('... attach handler', element);
+            element.addEventListener('mousedown', function () {
+              console.log('... onmousedown', element);
+            });
+          });
+        });
+      },
       components: {
         "GridLayout": GridLayout,
         "GridItem": GridItem
@@ -267,6 +279,17 @@ function buildView(divId, layout, sdContent=[], numCols=12, gridRowHeight=200, d
 	      updateSdSelection: function() {
 	        this.sdContent = updateSdSelection();
 	      },
+
+        resizeEvent: function(i, newH, newW){
+          console.log("RESIZE i=" + i + ", H=" + newH + ", W=" + newW);
+        },
+        dragStart: function(){
+          console.log("dragStart");
+        },
+        resizeStart: function(){
+          console.log("resizeStart", this);
+        },
+
       }
   });
 
