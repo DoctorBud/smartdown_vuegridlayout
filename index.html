@@ -14,12 +14,24 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
 
     <script src="https://unpkg.com/vue/dist/vue.min.js"></script>
-
     <script src="https://smartdown.site/lib/smartdown.js"></script>
+
+    <style>
+    [v-cloak] {
+      display: none;
+    }
+    </style>
+
+    <style>
+    .disable-hover {
+      background: pink !important;
+    }
+    </style>
 </head>
 
 <body>
     <div
+        v-cloak
         id="layoutApp">
         <div class="layoutJSON">
         <button v-on:click="applySmartdown">Apply Content</button>
@@ -43,9 +55,9 @@
                     <b>{{item.i}}</b>: [{{item.x}}, {{item.y}}, {{item.w}}, {{item.h}}]
                 </div>
             </div>
-	   
+
         </div>
-       
+
 	<grid-layout :layout="layout"
                      :col-num="numCols"
                      :row-height="rowHeight"
@@ -59,16 +71,20 @@
                        :w="item.w"
                        :h="item.h"
                        :i="item.i"
+                       @resize="resizeEvent"
                        drag-allow-from=".vue-draggable-handle"
                        drag-ignore-from=".no-drag">
-                <div class="vue-draggable-handle"></div>
+                <div
+                  class="vue-draggable-handle"
+                  v-on:click="dragStart">
+                </div>
                 <div class="no-drag smartdown-container" v-bind:id="item.divID">
                 </div>
             </grid-item>
         </grid-layout>
 
     </div>
-    
+
     <script src="vue-grid-layout.min.js"></script>
     <script src="sd_basic_grid.js"></script>
 </body>
