@@ -170,7 +170,7 @@ function buildRowLayout(numOfSDContent, numCols) {
   return layout;
 }
 
-function optimizeSDGridCellHeight(layout) {
+function optimizeSDGridCellHeight(layout, rowHeight) {
   layout.forEach(function(layoutElement, layoutElementIndex) {
     var divID = layoutElement.divID;
     var SDGridCellDiv = document.getElementById(divID);
@@ -179,9 +179,9 @@ function optimizeSDGridCellHeight(layout) {
       console.log('Error when adjusting Smartdown container grid height: need to populate SD content first!');
     }
     else {
-      var divHeight = SDGridCellDiv.clientHeight;
+      //var divHeight = SDGridCellDiv.clientHeight;
       var SDHeight = SDInnerContainer.clientHeight;
-      var newHeight = Math.ceil(SDHeight / divHeight);
+      var newHeight = Math.ceil(SDHeight / rowHeight);
       layoutElement.h = newHeight;
       if (layoutElement.y !== 0) {
         layoutElement.y = layout[layoutElementIndex-1].y + layout[layoutElementIndex-1].h;
@@ -274,7 +274,7 @@ function buildView(divId, layout, sdContent=[], numCols=12, gridRowHeight=200, d
           applySmartdown(this.layout, this.sdContent);
         },
         optimizeSDGridCellHeight: function() {
-          optimizeSDGridCellHeight(this.layout);
+          optimizeSDGridCellHeight(this.layout, this.rowHeight);
         },
 	      updateSdSelection: function() {
 	        this.sdContent = updateSdSelection();
