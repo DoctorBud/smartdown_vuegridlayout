@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+  <base href="https://smartdown.site/lib/">
+
+  <title>Smartdown Via bl.ocks.org</title>
+
+  <link
+    rel="stylesheet"
+    href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+    integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+    crossorigin="anonymous">
+
+  <link rel=stylesheet href="https://unpkg.com/smartdown/docs/lib/smartdown.css">
+  <script src="https://smartdown.site/lib/smartdown.js"></script>
+</head>
+
+<body
+  style="margin:0;padding:0;background:white;">
+
+  <style>
+  .outerContainer {
+    display: grid;
+    grid-template-columns: [start] 1fr [line2] 1fr [line3] 1fr [end];
+    grid-template-rows: auto;
+    grid-column-gap: 10px;
+    xjustify-items: center;
+    grid-template-areas: 
+      "output1 output2 output3";
+  }
+
+  #smartdown-output1 {
+    grid-area: output1;
+  }
+
+  #smartdown-output2 {
+    grid-area: output2;
+  }
+
+  #smartdown-output3 {
+    grid-area: output3;
+  }
+
+  </style>
+
+  <div class="outerContainer">
+    <div
+      class="smartdown-container"
+      id="smartdown-output1">
+    </div>
+
+    <hr>
+
+    <div
+      class="smartdown-container"
+      id="smartdown-output2">
+    </div>
+
+    <hr>
+
+    <div
+      class="smartdown-container"
+      id="smartdown-output3">
+    </div>
+  </div>
+  <script>
+/* eslint-disable */
+/* global smartdown */
+var baseURL = 'https://smartdown.site/';
+var svgIcons = {
+};
+
+
+function smartdownLoaded() {
+  console.log('smartdownLoaded... populating DIVs');
+  var div1 = document.getElementById('smartdown-output1');
+  var div2 = document.getElementById('smartdown-output2');
+  var div3 = document.getElementById('smartdown-output3');
+
+  var text1 =
+`
+### Welcome to Div1
+
+[What is your name?](:?Name)
+
+#### A Few of My Favorite Things
+
+- Raindrops on Roses
+- Whiskers on Kittens
+- Bright copper kettles
+- Warm woollen mittens
+- Brown paper packages tied up with strings
+
+`;
+
+  var text2 =
+`
+### Welcome to Div2
+
+Pleasant to meet you, [](:!Name)
+`;
+
+  var text3 = 
+`
+### Welcome to Div3
+
+
+\`\`\`p5js/playable
+var PI = Math.PI;
+var HALF_PI = PI / 2.0;
+var SEGMENTS = env.SEGMENTS || 50;  // number of segments
+var SEG_WIDTH = env.SEG_WIDTH || 8;
+var SEG_LENGTH = env.SEG_LENGTH || 100;
+var DIAMETER = SEG_LENGTH * 2;
+var speed = 0.05;
+var ax = .01;
+var ay = ax;
+var az = ay;
+var dx, dy, dz;
+
+p5.setup = function() {
+  dx = p5.random(-speed, speed);
+  dy = p5.random(-speed, speed);
+  dz = p5.random(-speed, speed);
+
+  p5.createCanvas(200, 200, 'webgl');
+  p5.normalMaterial();
+
+  p5.frameRate(35);
+};
+
+p5.draw = function() {
+  p5.camera(0, SEG_LENGTH, SEG_LENGTH, 0, 0, 0, 0, 1, 0);
+  p5.rotateX(ax += dx);
+  p5.rotateY(ay += dy);
+  p5.rotateZ(az += dz);
+
+  for (var i = 0; i < SEGMENTS; i++) {
+    var frac = i * 2 / SEGMENTS;
+    p5.push();
+    p5.rotateX(frac * HALF_PI);
+    p5.rotateY(HALF_PI);
+    p5.translate(
+        0,
+        DIAMETER * p5.cos(frac * HALF_PI),
+        DIAMETER * p5.sin(frac * PI));
+    p5.cylinder(SEG_WIDTH, SEG_LENGTH);
+    p5.pop();
+  }
+};
+\`\`\`
+
+
+`;
+
+  smartdown.setSmartdown(text1, div1);
+  smartdown.setSmartdown(text2, div2);
+  smartdown.setSmartdown(text3, div3);
+}
+
+
+var calcHandlers = null;
+const linkRules = [
+];
+
+smartdown.initialize(svgIcons, baseURL, smartdownLoaded, null, calcHandlers, linkRules);
+  </script>
+</body>
+</html>
