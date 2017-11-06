@@ -1,0 +1,27 @@
+layout:
+  cells:
+    - posX: 0
+      posY: 0
+      dimW: 6
+      dimH: 1
+      contentURL: https://smartdown.site/lib/gallery/README.md
+    - posX: 6
+      posY: 0
+      dimW: 6
+      dimH: 1
+      contentURL: https://smartdown.site/lib/gallery/Math.md
+    - posX: 6
+      posY: 1
+      dimW: 6
+      dimH: 1
+      contentURL: https://smartdown.site/lib/gallery/Graphviz.md
+    - posX: 6
+      posY: 2
+      dimW: 6
+      dimH: 1
+      contentURL: https://smartdown.site/lib/gallery/Maps.md
+    - posX: 6
+      posY: 3
+      dimW: 6
+      dimH: 1
+      contentURL: https://smartdown.site/lib/gallery/P5JS.md

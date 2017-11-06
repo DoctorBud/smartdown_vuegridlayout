@@ -1,0 +1,22 @@
+layout:
+  cells:
+    - posX: 0
+      posY: 0
+      dimW: 12
+      dimH: 3
+      contentURL: tableaux/comic1.md
+    - posX: 8
+      posY: 3
+      dimW: 4
+      dimH: 2
+      contentURL: tableaux/comic2.md
+    - posX: 4
+      posY: 3
+      dimW: 4
+      dimH: 2
+      contentURL: tableaux/comic3.md
+    - posX: 0
+      posY: 3
+      dimW: 4
+      dimH: 2
+      contentURL: tableaux/comic4.md

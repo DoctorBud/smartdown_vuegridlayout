@@ -1,7 +1,8 @@
+const authorMode = false;
 
-var SDtext1 =
+var debugCard0 =
 `
-### Welcome to Div1
+### Welcome to Debug Card 0
 
 [What is your name?](:?Name)
 
@@ -15,9 +16,9 @@ var SDtext1 =
 
 `;
 
-var SDtext2 =
+var debugCard1 =
 `
-### Welcome to Div2
+### Welcome to Debug Card 1
 
 Pleasant to meet you, [](:!Name)
 
@@ -29,12 +30,12 @@ Pleasant to meet you, [](:!Name)
 
 `;
 
-var SDtext3 =
+var debugCard2 =
 `
-### Welcome to Div3
+### Welcome to Debug Card 2
 
 
-\`\`\`p5js/playable
+\`\`\`p5js/playable/autoplay
 var PI = Math.PI;
 var HALF_PI = PI / 2.0;
 var SEGMENTS = env.SEGMENTS || 50;  // number of segments
@@ -59,6 +60,7 @@ p5.setup = function() {
 };
 
 p5.draw = function() {
+  p5.background('ivory');
   p5.camera(0, SEG_LENGTH, SEG_LENGTH, 0, 0, 0, 0, 1, 0);
   p5.rotateX(ax += dx);
   p5.rotateY(ay += dy);
@@ -81,36 +83,30 @@ p5.draw = function() {
 
 
 `;
+var debugContent = [debugCard0, debugCard1, debugCard2];
 
-// Initialize with some placeholder Smartdown content for testing, later can render user selected content
-var testSD = [SDtext1, SDtext2, SDtext3];
-var numOfInitialSDContent = testSD.length;
-
-function updateSdSelection() {
+function updateSdSelection(sdContent, done) {
   // !This is bad, how is a method within a view to know about DOM elements?!
   var selectedFiles = document.getElementById('sdSelection').files;
-  console.log(selectedFiles);
-  var sdContent = new Array(selectedFiles.length); 
-  function updateSdContent(sdContent, index) {
+  sdContent.length = 0;
+  sdContent.length = selectedFiles.length;
+  var numItemsLeft = sdContent.length;
+  function updateSdContent(index) {
     return function(event) {
       var sdText = event.target.result;
-      // console.log(index, sdText);
       sdContent[index] = sdText;
+      if (--numItemsLeft === 0) {
+        done();
+      }
     };
   }
 
   for (var indexOfFile = 0; indexOfFile < selectedFiles.length; indexOfFile++) {
     var reader = new FileReader();
-    reader.onloadend = updateSdContent(sdContent, indexOfFile);
+    reader.onloadend = updateSdContent(indexOfFile);
     reader.readAsText(selectedFiles[indexOfFile]);
   }
-  return sdContent;
 }
-
-var sdContent = []; // This is a place holder
-//var sdContent = [SDtext1, SDtext2, SDtext3];
-//var numOfSDContent = sdContent.length;
-
 
 Vue.config.debug = true;
 Vue.config.devtools = true;
@@ -122,6 +118,32 @@ var gridView = null;
 const defaultRowHeight = 100;
 const numColumns = 12;
 const vueAppDivId = 'layoutApp';
+
+
+function buildStaggeredLayout(numOfSDContent, numCols) {
+  console.log('buildStaggeredLayout', numOfSDContent, numCols);
+  var width = numCols / numOfSDContent;
+  var height = 1;
+  var layout = Array(numOfSDContent);
+  let x = 0;
+
+  for (var index = 0; index < numOfSDContent; index++) {
+    let h = height * (index + 1);
+    layout[index] = {
+      "x": x,
+      "y": 0,
+      "w": width,
+      "h": h,
+      "i": index.toString(),
+      "divID": "smartdown-output" + index
+    };
+
+    x += width;
+  }
+
+  return layout;
+}
+
 
 
 function buildColumnLayout(numOfSDContent, numCols) {
@@ -170,29 +192,32 @@ function buildRowLayout(numOfSDContent, numCols) {
   return layout;
 }
 
-function optimizeSDGridCellHeight(layout, rowHeight) {
+
+function fitContent(layout, rowHeight) {
   layout.forEach(function(layoutElement, layoutElementIndex) {
     var divID = layoutElement.divID;
-    var SDGridCellDiv = document.getElementById(divID);
-    var SDInnerContainer = SDGridCellDiv.children[0];
-    if (!SDInnerContainer) {
+    var gridCellDiv = document.getElementById(divID);
+    var innerContainer = gridCellDiv.children[0];
+    if (!innerContainer) {
       console.log('Error when adjusting Smartdown container grid height: need to populate SD content first!');
     }
     else {
-      //var divHeight = SDGridCellDiv.clientHeight;
-      var SDHeight = SDInnerContainer.clientHeight;
-      var newHeight = Math.ceil(SDHeight / rowHeight);
-      layoutElement.h = newHeight;
-      if (layoutElement.y !== 0) {
-        layoutElement.y = layout[layoutElementIndex-1].y + layout[layoutElementIndex-1].h;
+      var contentHeight = innerContainer.clientHeight;
+      var maxHeight = window.innerHeight;
+      if (contentHeight > maxHeight) {
+        contentHeight = maxHeight;
       }
+      var newHeight = Math.floor(contentHeight / rowHeight) + 1;
+
+      layoutElement.h = newHeight;
+      layoutElement.moved = true;
     }
   });
 }
 
-function applySmartdown(layout, contentItems) {
-  console.log('applySmartdown', layout);
-  if (contentItems.length == 0) {
+
+function applySmartdown(layout, contentItems, done) {
+  if (!contentItems || contentItems.length == 0) {
     console.log('No smartdown content, please select smartdown files to display!')
   }
   else if (contentItems.length !== layout.length) {
@@ -200,6 +225,7 @@ function applySmartdown(layout, contentItems) {
     console.log('applySmartdown ERROR ... numOfSDContent !== layout.length', numOfSDContent, layout.length);
   }
   else {
+    var unresolvedItems = contentItems.length;
     layout.forEach(function(layoutElement, layoutElementIndex) {
       var divID = layoutElement.divID;
       var div = document.getElementById(divID);
@@ -209,79 +235,219 @@ function applySmartdown(layout, contentItems) {
       else {
         var content = contentItems[layoutElementIndex];
         // div.innerHTML = content;
-        smartdown.setSmartdown(content, div);
+        smartdown.setSmartdown(content, div, function() {
+          smartdown.startAutoplay(div);
+
+          if (--unresolvedItems === 0) {
+            done();
+          }
+        });
       }
     });
   }
 }
 
+function loadTableau(layoutURL, done) {
+  var oReq = new XMLHttpRequest();
+  oReq.addEventListener('load', function() {
+    var tableau = jsyaml.safeLoad(this.responseText);
+    var cells = tableau.layout.cells;
+    var layout = [];
+    var content = [];
+    var cellsRemainingUntilDone = cells.length;
+    cells.forEach(function(cell, i) {
+      var index = i.toString();
+      var layoutCell = {
+        x: cell.posX,
+        y: cell.posY,
+        w: cell.dimW,
+        h: cell.dimH,
+        i: index,
+        contentURL: cell.contentURL,
+        divID: 'smartdown-output' + index
+      };
+      layout.push(layoutCell);
 
-function buildView(divId, layout, sdContent=[], numCols=12, gridRowHeight=200, draggable=true, resizable=true) {
+      var contentValue = 'Not Yet Loaded';
+      content.push(contentValue);
+
+      var contentURL = cell.contentURL;
+      if (contentURL && contentURL.length > 0) {
+        var contentReq = new XMLHttpRequest();
+        contentReq.addEventListener('load', function(x) {
+          content[i] = this.responseText;
+          if (--cellsRemainingUntilDone === 0) {
+            done(layout, content);
+          }
+        });
+        contentReq.open('GET', contentURL);
+        contentReq.send();
+      }
+      else {
+        content[i] = '';
+        if (--cellsRemainingUntilDone === 0) {
+          done(layout, content);
+        }
+      }
+    });
+  });
+  oReq.open('GET', layoutURL);
+  oReq.send();
+}
+
+function exportTableau(layout, content) {
+  var layoutCells = [];
+  layout.forEach(function(cell, index) {
+    var layoutCell = {
+      posX: cell.x,
+      posY: cell.y,
+      dimW: cell.w,
+      dimH: cell.h,
+      contentURL: cell.contentURL || ''
+    };
+
+    layoutCells.push(layoutCell);
+  });
+
+  var tableau = {
+    layout: {
+      cells: layoutCells
+    }
+  };
+
+  var yaml = jsyaml.dump(tableau);
+  console.log('exportTableau', yaml);
+
+
+  var filename = 'tableau.yaml';
+  var yamlExportData =
+    encodeURI('data:text/x-yaml;charset=utf-8,' + yaml);
+
+  var link = document.createElement('a');
+  link.href = yamlExportData;
+  link.download = filename;
+  link.target = '_blank';
+  document.body.appendChild(link);  // required in FF, optional for Chrome/Safari
+  link.click();
+  document.body.removeChild(link);  // required in FF, optional for Chrome/Safari
+}
+
+
+function buildView(divId, initialLayout, initialContent=[], numCols=12, gridRowHeight=200, draggable=false, resizable=false) {
   /*global Vue*/
   var view = new Vue({
-      el: '#'+divId,
+      el: '#' + divId,
       created: function () {
-        // `this` points to the vm instance
-        console.log('created... data', this);
-
-        // stretchItems(this, this.layout);
       },
       mounted: function() {
-        this.$nextTick(function () {
-          var resizeHandles = this.$el.querySelectorAll('span.vue-resizable-handle');
-          console.log('resizeHandles', resizeHandles);
-          resizeHandles.forEach(function(element) {
-            console.log('... attach handler', element);
-            element.addEventListener('mousedown', function () {
-              console.log('... onmousedown', element);
-            });
+        const that = this;
+        if (initialContent && initialLayout) {
+          this.sdContent = initialContent;
+          this.layout = initialLayout;
+          this.applyContentAndFixLayout();
+        }
+        else {
+          loadTableau('tableaux/welcome.yaml', function(layout, sdContent) {
+            that.layout = layout;
+            that.sdContent = sdContent;
+            that.applyContentAndFixLayout();
           });
-        });
+        }
       },
       components: {
         "GridLayout": GridLayout,
         "GridItem": GridItem
       },
       data: {
-        layout: layout,
+        layout: [],
         rowHeight: gridRowHeight,
         numCols: numCols,
-      	sdContent: sdContent,
+      	sdContent: [],
         draggable: draggable,
-        resizable: resizable
+        resizable: resizable,
+        index: 0,
+        isDragging: function() {
+          return this.$refs.layout ?
+            this.$refs.layout.isDragging :
+            false;
+        },
+        showSettings: false
       },
       computed: {
-        numOfSDContent: function() {
-          return this.sdContent.length;
-        }
       },
       watch: {
-        numOfSDContent: function(newNumOfSDContent) {
-          console.log('numOfSDContent changed');
-	  this.switchToColumnLayout();
-        }
       },
       methods: {
+        loadTableau: function(name) {
+          var that = this;
+          loadTableau('tableaux/' + name + '.yaml', function(layout, sdContent) {
+            that.layout = layout;
+            that.sdContent = sdContent;
+            that.applyContentAndFixLayout();
+          });
+        },
+        exportTableau: function() {
+          exportTableau(this.layout, this.sdContent);
+        },
+        applyContentAndFixLayout: function() {
+          var that = this;
+          that.$nextTick(function () {
+            applySmartdown(that.layout, that.sdContent, function() {
+              that.fixLayout();
+            });
+          });
+        },
+        fixLayout: function() {
+          var that = this;
+          fitContent(that.layout, that.rowHeight);
+          that.$nextTick(function () {
+            that.$refs.layout.lastLayoutLength = 0;
+            that.$refs.layout.layoutUpdate();
+            window.setTimeout(function () {
+              fitContent(that.layout, that.rowHeight);
+              that.$refs.layout.onWindowResize();
+              that.$refs.layout.updateHeight();
+            }, 1000);
+          });
+        },
         switchToColumnLayout: function() {
-          this.layout = buildColumnLayout(this.numOfSDContent, this.numCols);
+          this.layout = buildColumnLayout(this.sdContent.length, this.numCols);
+          this.fixLayout();
         },
 
         switchToRowLayout: function() {
-          this.layout = buildRowLayout(this.numOfSDContent, this.numCols);
+          this.layout = buildRowLayout(this.sdContent.length, this.numCols);
+          this.fixLayout();
         },
 
         applySmartdown: function() {
-          applySmartdown(this.layout, this.sdContent);
-        },
-        optimizeSDGridCellHeight: function() {
-          optimizeSDGridCellHeight(this.layout, this.rowHeight);
+          var that = this;
+          applySmartdown(this.layout, this.sdContent, function() {
+            that.fixLayout();
+          });
         },
 	      updateSdSelection: function() {
-	        this.sdContent = updateSdSelection();
+          this.sdContent = [];
+          var that = this;
+	        updateSdSelection(this.sdContent, function() {
+            that.layout = buildColumnLayout(that.sdContent.length, that.numCols);
+            that.$nextTick(function () {
+              applySmartdown(that.layout, that.sdContent, function() {
+                that.fixLayout();
+              });
+            });
+          });
 	      },
 
         resizeEvent: function(i, newH, newW){
-          console.log("RESIZE i=" + i + ", H=" + newH + ", W=" + newW);
+          // console.log("RESIZE i=" + i + ", H=" + newH + ", W=" + newW);
+        },
+        resizedEvent: function(i, newH, newW, newHPx, newWPx){
+          const that = this;
+          console.log("RESIZED");
+          this.$nextTick(function () {
+            that.fixLayout();
+          });
         },
         dragStart: function(){
           console.log("dragStart");
@@ -304,15 +470,12 @@ var svgIcons = {
 };
 
 function smartdownLoaded() {
-    console.log('smartdownLoaded... populating DIVs');
-  //   for (var index of indexes) {
-  //       var SDOutputDiv = document.getElementById(rowOrientedLayout[index].sdi);
-  //       smartdown.setSmartdown(sdContent[index], SDOutputDiv);
-  //   }
-  var layout = buildColumnLayout(numOfInitialSDContent, numColumns);
-  gridView = buildView(vueAppDivId, layout, testSD);
-
-  // initMutationObserver();
+  var debugLayout = debugContent ?
+    buildColumnLayout(debugContent.length, numColumns) :
+    null;
+  // debugLayout = buildStaggeredLayout(3, numColumns);
+  debugLayout = null;
+  gridView = buildView(vueAppDivId, debugLayout, debugContent, 12, defaultRowHeight, authorMode, authorMode);
 }
 
 var calcHandlers = null;
@@ -320,85 +483,3 @@ const linkRules = [
 ];
 
 smartdown.initialize(svgIcons, baseURL, smartdownLoaded, null, calcHandlers, linkRules);
-
-
-
-/* additional vue-grid-layout functions that might be useful
-  mounted: function () {
-      this.index = this.layout.length;
-  },
-  methods: {
-      increaseWidth: function(item) {
-          var width = document.getElementById("content").offsetWidth;
-          width += 20;
-          document.getElementById("content").style.width = width+"px";
-      },
-      decreaseWidth: function(item) {
-
-          var width = document.getElementById("content").offsetWidth;
-          width -= 20;
-          document.getElementById("content").style.width = width+"px";
-      },
-      removeItem: function(item) {
-          //console.log("### REMOVE " + item.i);
-          this.layout.splice(this.layout.indexOf(item), 1);
-      },
-      addItem: function() {
-          var self = this;
-          //console.log("### LENGTH: " + this.layout.length);
-          var item = {"x":0,"y":0,"w":2,"h":2,"i":this.index+"", whatever: "bbb"};
-          this.index++;
-          this.layout.push(item);
-      }
-  }
-*/
-
-
-/***** Leftovers to be deleted after the essential height calculation is extracted.
-  function initMutationObserver() {
-      var target = document.querySelector('.vue-grid-layout');
-
-      var observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-          // console.log(mutation.type);
-          if (mutation.type == "childList" &&
-              mutation.target.className == "no-drag smartdown-container" &&
-              mutation.addedNodes.length != 0) {
-              // console.log(mutation.type, mutation.target.className, mutation.addedNodes.length);
-              var SDInnerDiv = mutation.addedNodes[0]; // mutation.target.firstchild // !This firstchild kept coming back as undefined;
-              var SDHeight = SDInnerDiv.clientHeight;
-              var numRows = Math.ceil(SDHeight / gridRowHeight);
-              // console.log(SDInnerDiv, numRows);
-              var SDParentId= SDInnerDiv.parentElement.id
-              var index = SDParentId.substr(SDParentId.length - 1)
-              rowOrientedLayout[index].h = numRows;
-          }
-          else {
-              console.log('Nothing added to' + mutation.target.className);
-          }
-         });
-
-      });
-
-
-      var config = {
-              attributes: false,
-              childList: true,
-              subtree: true,
-              characterData: false
-          }
-
-      observer.observe(target, config);
-  }
-
-  function updateSDHeight() {
-      var SDContainerDivList = document.querySelectorAll('.smartdown-container');
-      console.log(SDContainerDivList);
-      SDContainerDivList.forEach(function(currentValue, currentIndex, listObj) {
-          var SDInnerDiv = currentValue.firstchild;
-          var SDHeight = SDInnerDiv.clientHeight;
-          var numRows = Math.ceil(SDHeight / rowHeight); // Round this up to int
-          rowOrientedLayout[i].h = numRows;
-      });
-  }
-*/
