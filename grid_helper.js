@@ -1,4 +1,6 @@
 const authorMode = false;
+const enforceMaxHeight = false;
+
 
 var debugCard0 =
 `
@@ -84,6 +86,13 @@ p5.draw = function() {
 
 `;
 var debugContent = [debugCard0, debugCard1, debugCard2];
+
+/*
+  var x = 0;
+
+  var y = x++;
+
+*/
 
 function updateSdSelection(sdContent, done) {
   // !This is bad, how is a method within a view to know about DOM elements?!
@@ -203,9 +212,11 @@ function fitContent(layout, rowHeight) {
     }
     else {
       var contentHeight = innerContainer.clientHeight;
-      var maxHeight = window.innerHeight;
-      if (contentHeight > maxHeight) {
-        contentHeight = maxHeight;
+      if (enforceMaxHeight) {
+        var maxHeight = window.innerHeight;
+        if (contentHeight > maxHeight) {
+          contentHeight = maxHeight;
+        }
       }
       var newHeight = Math.floor(contentHeight / rowHeight) + 1;
 
@@ -338,21 +349,36 @@ function buildView(divId, initialLayout, initialContent=[], numCols=12, gridRowH
   var view = new Vue({
       el: '#' + divId,
       created: function () {
+        if (window.gridHelperOptions) {
+          this.kioskMode = window.gridHelperOptions.kioskMode;
+          this.tableaux = window.gridHelperOptions.tableaux || ['Welcome', 'Comic', 'Gallery'];
+          this.defaultTableauName = window.gridHelperOptions.defaultTableauName || this.tableaux[0] || 'welcome';
+        }
+        else {
+          this.tableaux = ['Welcome', 'Comic', 'Gallery'];
+          this.defaultTableauName = this.tableaux[0];
+        }
       },
       mounted: function() {
         const that = this;
+        window.addEventListener('resize', that.onResize);
+
         if (initialContent && initialLayout) {
           this.sdContent = initialContent;
           this.layout = initialLayout;
           this.applyContentAndFixLayout();
         }
         else {
-          loadTableau('tableaux/welcome.yaml', function(layout, sdContent) {
+          loadTableau(`tableaux/${this.defaultTableauName}.yaml`, function(layout, sdContent) {
             that.layout = layout;
             that.sdContent = sdContent;
             that.applyContentAndFixLayout();
           });
         }
+      },
+      beforeDestroy() {
+        // Unregister the event listener before destroying this Vue instance
+        window.removeEventListener('resize', this.onResize)
       },
       components: {
         "GridLayout": GridLayout,
@@ -366,21 +392,30 @@ function buildView(divId, initialLayout, initialContent=[], numCols=12, gridRowH
         draggable: draggable,
         resizable: resizable,
         index: 0,
-        isDragging: function() {
-          return this.$refs.layout ?
-            this.$refs.layout.isDragging :
-            false;
-        },
-        showSettings: false
+        showSettings: authorMode,
+        kioskMode: false,
+        defaultTableauName: 'welcome',
+        tableaux: []
       },
       computed: {
       },
       watch: {
       },
       methods: {
+        onResize(event) {
+          var that = this;
+          this.$nextTick(function () {
+            that.fixLayout();
+          });
+        },
+        isDragging: function() {
+          return this.$refs.layout ?
+            this.$refs.layout.isDragging :
+            false;
+        },
         loadTableau: function(name) {
           var that = this;
-          loadTableau('tableaux/' + name + '.yaml', function(layout, sdContent) {
+          loadTableau('tableaux/' + name.toLowerCase() + '.yaml', function(layout, sdContent) {
             that.layout = layout;
             that.sdContent = sdContent;
             that.applyContentAndFixLayout();
@@ -420,17 +455,11 @@ function buildView(divId, initialLayout, initialContent=[], numCols=12, gridRowH
           this.fixLayout();
         },
 
-        applySmartdown: function() {
-          var that = this;
-          applySmartdown(this.layout, this.sdContent, function() {
-            that.fixLayout();
-          });
-        },
 	      updateSdSelection: function() {
           this.sdContent = [];
           var that = this;
 	        updateSdSelection(this.sdContent, function() {
-            that.layout = buildColumnLayout(that.sdContent.length, that.numCols);
+            that.layout = buildRowLayout(that.sdContent.length, that.numCols);
             that.$nextTick(function () {
               applySmartdown(that.layout, that.sdContent, function() {
                 that.fixLayout();
@@ -445,9 +474,11 @@ function buildView(divId, initialLayout, initialContent=[], numCols=12, gridRowH
         resizedEvent: function(i, newH, newW, newHPx, newWPx){
           const that = this;
           console.log("RESIZED");
-          this.$nextTick(function () {
-            that.fixLayout();
-          });
+          if (!authorMode) {
+            this.$nextTick(function () {
+              that.fixLayout();
+            });
+          }
         },
         dragStart: function(){
           console.log("dragStart");

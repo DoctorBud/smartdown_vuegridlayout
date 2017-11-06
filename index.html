@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="utf-8">
     <title>Smartdown Grid Layout (using vue-grid-layout) </title>
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+
     <link rel="stylesheet" href="vuegridlayout.css">
     <link rel="stylesheet" href="https://unpkg.com/smartdown/docs/lib/smartdown.css">
 
@@ -14,33 +15,30 @@
     <script src="https://unpkg.com/vue/dist/vue.js"></script>
 
     <script src="https://unpkg.com/vue-grid-layout/dist/vue-grid-layout.min.js"></script>
-
-<!-- 
-    <script src="vgldebug/vue-grid-layout.js"></script>
- -->
-
     <script src="https://smartdown.site/lib/smartdown.js"></script>
-</head>
+  </head>
 
-<body
-  class="container container-fluid"
-  id="bodyID">
-    <div
+  <body
+    class="container container-fluid"
+    id="bodyID">
+      <div
         v-cloak
         v-bind:class="{ 'disable-select': isDragging() }"
         id="layoutApp">
-        <div class="layoutJSON">
+
+        <div
+          class="layoutJSON">
           <div class="row">
-            <div class="col-xs-3">
+            <div class="col-xs-9">
+              <button
+                v-for="t in tableaux"
+                class="btn btn-default btn-xs"
+                v-on:click="loadTableau(t)">
+                {{t}}
+              </button>
+            </div>
+            <div class="col-xs-3" v-if="!kioskMode">
               <input type="checkbox" v-model="showSettings"/>&nbsp;Settings
-            </div>
-            <div class="col-xs-7">
-              <button class="btn btn-default btn-xs" v-on:click="loadTableau('welcome')">Welcome</button>
-              <button class="btn btn-default btn-xs" v-on:click="loadTableau('comic')">Comic</button>
-              <button class="btn btn-default btn-xs" v-on:click="loadTableau('gallery')">Gallery (buggy)</button>
-            </div>
-            <div class="col-xs-2">
-              <button class="btn btn-default btn-xs" v-on:click="fixLayout">Fix</button>
             </div>
           </div>
           <div class="row" v-if="showSettings">
@@ -51,23 +49,6 @@
             </div>
             <div class="col-xs-8">
               <div class="row">
-                <div>
-                  <button class="btn btn-default btn-xs" v-on:click="applySmartdown">Apply Content</button>
-                  <br>
-                  <input type="checkbox" v-model="draggable"/> Draggable
-                  <input type="checkbox" v-model="resizable"/> Resizable
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="col-xs-12">
-                  <button class="btn btn-default btn-xs" v-on:click="switchToColumnLayout">Column Layout</button>
-                  <button class="btn btn-default btn-xs" v-on:click="switchToRowLayout">Row Layout</button>
-                  <button class="btn btn-default btn-xs" v-on:click="exportTableau">Export Tableau</button>
-                </div>
-              </div>
-
-              <div class="row">
                 <div class="col-xs-12">
                   <input
                     type="file"
@@ -77,6 +58,26 @@
                     multiple/>
                 </div>
               </div>
+              <div class="row">
+                <div class="col-xs-12">
+                  <button class="btn btn-default btn-xs" v-on:click="switchToColumnLayout">Column Layout</button>
+                  <button class="btn btn-default btn-xs" v-on:click="switchToRowLayout">Row Layout</button>
+                  <button class="btn btn-default btn-xs" v-on:click="exportTableau">Export Tableau</button>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-xs-8">
+                  <input type="checkbox" v-model="draggable"/> Draggable
+                  <input type="checkbox" v-model="resizable"/> Resizable
+                </div>
+
+                <div class="col-xs-4">
+                  <button class="btn btn-default btn-xs" v-on:click="fixLayout">Fix</button>
+                </div>
+
+              </div>
+
+
             </div>
           </div>
         </div>
@@ -86,7 +87,7 @@
                         :layout="layout"
                         :col-num="numCols"
                         :row-height="rowHeight"
-                        :margin="[10, 10]"
+                        :margin="[3, 3]"
                         :is-draggable="draggable"
                         :is-resizable="resizable"
                         :vertical-compact="true"
@@ -116,24 +117,21 @@
       </div>
     </div>
 
-    <div class="footer">
-      <div class="row">
-        <div class="text-center col-xs-6">
-          <a
-            href="https://github.com/jbaysolutions/vue-grid-layout"
-            target="_blank">
-            vue-grid-layout on Github
-          </a>
-        </div>
-        <div class="text-center col-xs-6">
-          <a
-            href="https://github.com/DoctorBud/smartdown_vuegridlayout"
-            target="_blank">
-            smartdown_vuegridlayout on Github
-          </a>
-        </div>
-      </div>
-    </div>
-    <script src="sd_basic_grid.js"></script>
-</body>
+    <script>
+      //
+      // The options below control how the grid_helper behaves.
+      // They are designed to support publishing via bl.ocks.org, a blog, or Wordpress
+      //
+      //  kioskMode - 'true' means disable the Settings checkbox
+      //  tableaux - A list of names of tableaux in the tableaux/ directory
+      //  defaultTableauName - The tableau to load by default. Default is tableaux[0]
+      //
+      window.gridHelperOptions = {
+        kioskMode: true,
+        tableaux: ['Comic', 'Welcome'],
+        defaultTableauName: 'comic',
+      };
+    </script>
+    <script src="grid_helper.js"></script>
+  </body>
 </html>
