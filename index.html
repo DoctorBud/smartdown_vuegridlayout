@@ -7,85 +7,133 @@
     <link rel="stylesheet" href="vuegridlayout.css">
     <link rel="stylesheet" href="https://unpkg.com/smartdown/docs/lib/smartdown.css">
 
-    <!-- Latest compiled and minified CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-
-    <!-- Optional theme -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
 
-    <script src="https://unpkg.com/vue/dist/vue.min.js"></script>
+    <script src="https://unpkg.com/js-yaml/dist/js-yaml.min.js"></script>
+    <script src="https://unpkg.com/vue/dist/vue.js"></script>
+
+    <script src="https://unpkg.com/vue-grid-layout/dist/vue-grid-layout.min.js"></script>
+
+<!-- 
+    <script src="vgldebug/vue-grid-layout.js"></script>
+ -->
+
     <script src="https://smartdown.site/lib/smartdown.js"></script>
-
-    <style>
-    [v-cloak] {
-      display: none;
-    }
-    </style>
-
-    <style>
-    .disable-hover {
-      background: pink !important;
-    }
-    </style>
 </head>
 
-<body>
+<body
+  class="container container-fluid"
+  id="bodyID">
     <div
         v-cloak
+        v-bind:class="{ 'disable-select': isDragging() }"
         id="layoutApp">
         <div class="layoutJSON">
-        <button v-on:click="applySmartdown">Apply Content</button>
-        <button v-on:click="switchToColumnLayout">Switch To Column-layout</button>
-        <button v-on:click="switchToRowLayout">Switch To Row-layout</button>
-        <button v-on:click="optimizeSDGridCellHeight">Adjust SD Cell Height</button>
-            <input type="checkbox" v-model="draggable"/> Draggable
-            <input type="checkbox" v-model="resizable"/> Resizable
-	    <input type="file" id="sdSelection" accept=".md" v-on:change="updateSdSelection" multiple/> Select Smartdown inputs to render
-            <div class="pull-right">
-                <a
-                    href="https://github.com/jbaysolutions/vue-grid-layout">
-                    vue-grid-layout project on Github
-                </a>
+          <div class="row">
+            <div class="col-xs-3">
+              <input type="checkbox" v-model="showSettings"/>&nbsp;Settings
             </div>
-            <br>
-
-            Displayed as <code>[x, y, w, h]</code>:
-            <div class="columns">
-                <div class="layoutItem" v-for="item in layout">
-                    <b>{{item.i}}</b>: [{{item.x}}, {{item.y}}, {{item.w}}, {{item.h}}]
+            <div class="col-xs-7">
+              <button class="btn btn-default btn-xs" v-on:click="loadTableau('welcome')">Welcome</button>
+              <button class="btn btn-default btn-xs" v-on:click="loadTableau('comic')">Comic</button>
+              <button class="btn btn-default btn-xs" v-on:click="loadTableau('gallery')">Gallery (buggy)</button>
+            </div>
+            <div class="col-xs-2">
+              <button class="btn btn-default btn-xs" v-on:click="fixLayout">Fix</button>
+            </div>
+          </div>
+          <div class="row" v-if="showSettings">
+            <div class="col-xs-4">
+              <div class="layoutItem" v-for="item in layout">
+                  <b>{{item.i}}</b>: [{{item.x}}, {{item.y}}, {{item.w}}, {{item.h}}]
+              </div>
+            </div>
+            <div class="col-xs-8">
+              <div class="row">
+                <div>
+                  <button class="btn btn-default btn-xs" v-on:click="applySmartdown">Apply Content</button>
+                  <br>
+                  <input type="checkbox" v-model="draggable"/> Draggable
+                  <input type="checkbox" v-model="resizable"/> Resizable
                 </div>
-            </div>
+              </div>
 
+              <div class="row">
+                <div class="col-xs-12">
+                  <button class="btn btn-default btn-xs" v-on:click="switchToColumnLayout">Column Layout</button>
+                  <button class="btn btn-default btn-xs" v-on:click="switchToRowLayout">Row Layout</button>
+                  <button class="btn btn-default btn-xs" v-on:click="exportTableau">Export Tableau</button>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-xs-12">
+                  <input
+                    type="file"
+                    id="sdSelection"
+                    accept=".md"
+                    v-on:change="updateSdSelection"
+                    multiple/>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-	<grid-layout :layout="layout"
-                     :col-num="numCols"
-                     :row-height="rowHeight"
-                     :is-draggable="draggable"
-                     :is-resizable="resizable"
-                     :vertical-compact="true"
-                     :use-css-transforms="true">
-            <grid-item v-for="item in layout" :key="item.i"
-                       :x="item.x"
-                       :y="item.y"
-                       :w="item.w"
-                       :h="item.h"
-                       :i="item.i"
-                       @resize="resizeEvent"
-                       drag-allow-from=".vue-draggable-handle"
-                       drag-ignore-from=".no-drag">
-                <div
-                  class="vue-draggable-handle"
-                  v-on:click="dragStart">
-                </div>
-                <div class="no-drag smartdown-container" v-bind:id="item.divID">
-                </div>
-            </grid-item>
-        </grid-layout>
+        <div id="content" class="smartdown-container">
+          <grid-layout  ref="layout"
+                        :layout="layout"
+                        :col-num="numCols"
+                        :row-height="rowHeight"
+                        :margin="[10, 10]"
+                        :is-draggable="draggable"
+                        :is-resizable="resizable"
+                        :vertical-compact="true"
+                        :use-css-transforms="true">
+            <grid-item  v-for="item in layout" :key="item.i"
+                        :x="item.x"
+                        :y="item.y"
+                        :w="item.w"
+                        :h="item.h"
+                        :i="item.i"
+                        @resize="resizeEvent"
+                        @resized="resizedEvent"
+                        drag-allow-from=".vue-draggable-handle"
+                        drag-ignore-from=".no-drag">
 
+              <div
+                v-if="draggable"
+                class="vue-draggable-handle"
+                v-on:click="dragStart">
+              </div>
+              <div
+                class="no-drag smartdown-tile"
+                v-bind:id="item.divID">
+              </div>
+            </grid-item>
+          </grid-layout>
+      </div>
     </div>
 
-    <script src="vue-grid-layout.min.js"></script>
+    <div class="footer">
+      <div class="row">
+        <div class="text-center col-xs-6">
+          <a
+            href="https://github.com/jbaysolutions/vue-grid-layout"
+            target="_blank">
+            vue-grid-layout on Github
+          </a>
+        </div>
+        <div class="text-center col-xs-6">
+          <a
+            href="https://github.com/DoctorBud/smartdown_vuegridlayout"
+            target="_blank">
+            smartdown_vuegridlayout on Github
+          </a>
+        </div>
+      </div>
+    </div>
     <script src="sd_basic_grid.js"></script>
 </body>
 </html>
