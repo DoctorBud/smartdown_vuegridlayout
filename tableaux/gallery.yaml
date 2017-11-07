@@ -1,27 +1,27 @@
 layout:
   cells:
     - posX: 0
+      posY: 21
+      dimW: 6
+      dimH: 12
+      contentURL: 'https://smartdown.site/lib/gallery/Three.md'
+    - posX: 0
       posY: 0
+      dimW: 12
+      dimH: 21
+      contentURL: 'https://smartdown.site/lib/gallery/Math.md'
+    - posX: 0
+      posY: 33
       dimW: 6
-      dimH: 1
-      contentURL: https://smartdown.site/lib/gallery/README.md
+      dimH: 15
+      contentURL: 'https://smartdown.site/lib/gallery/Graphviz.md'
     - posX: 6
-      posY: 0
+      posY: 21
       dimW: 6
-      dimH: 1
-      contentURL: https://smartdown.site/lib/gallery/Math.md
-    - posX: 6
-      posY: 1
+      dimH: 28
+      contentURL: 'https://smartdown.site/lib/gallery/Maps.md'
+    - posX: 2
+      posY: 49
       dimW: 6
-      dimH: 1
-      contentURL: https://smartdown.site/lib/gallery/Graphviz.md
-    - posX: 6
-      posY: 2
-      dimW: 6
-      dimH: 1
-      contentURL: https://smartdown.site/lib/gallery/Maps.md
-    - posX: 6
-      posY: 3
-      dimW: 6
-      dimH: 1
-      contentURL: https://smartdown.site/lib/gallery/P5JS.md
+      dimH: 16
+      contentURL: 'https://smartdown.site/lib/gallery/P5JS.md'
