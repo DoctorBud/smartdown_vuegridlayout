@@ -1,4 +1,4 @@
-const authorMode = false;
+const authorMode = true;
 const enforceMaxHeight = false;
 
 
@@ -258,6 +258,7 @@ function applySmartdown(layout, contentItems, done) {
   }
 }
 
+
 function loadTableau(layoutURL, done) {
   var oReq = new XMLHttpRequest();
   oReq.addEventListener('load', function() {
@@ -352,7 +353,7 @@ function buildView(divId, initialLayout, initialContent=[], numCols=12, gridRowH
         if (window.gridHelperOptions) {
           this.kioskMode = window.gridHelperOptions.kioskMode;
           this.tableaux = window.gridHelperOptions.tableaux || ['Welcome', 'Comic', 'Gallery'];
-          this.defaultTableauName = window.gridHelperOptions.defaultTableauName || this.tableaux[0] || 'welcome';
+          this.defaultTableauName = window.gridHelperOptions.defaultTableauName || this.tableaux[0] || 'Welcome';
         }
         else {
           this.tableaux = ['Welcome', 'Comic', 'Gallery'];
@@ -362,18 +363,22 @@ function buildView(divId, initialLayout, initialContent=[], numCols=12, gridRowH
       mounted: function() {
         const that = this;
         window.addEventListener('resize', that.onResize);
-
+        window.onhashchange = that.locationHashChanged;
+        //window.addEventListener('hashChange', that.locationHashChanged);
         if (initialContent && initialLayout) {
           this.sdContent = initialContent;
           this.layout = initialLayout;
           this.applyContentAndFixLayout();
+          this.locationHash = '#Debug';
+          window.location.hash = this.locationHash;
         }
         else {
-          loadTableau(`tableaux/${this.defaultTableauName}.yaml`, function(layout, sdContent) {
-            that.layout = layout;
-            that.sdContent = sdContent;
-            that.applyContentAndFixLayout();
-          });
+          //loadTableau('tableaux/' + that.defaultTableauName.toLowerCase() + '.yaml', function(layout, sdContent) {
+            //that.layout = layout;
+            //that.sdContent = sdContent;
+            //that.applyContentAndFixLayout();
+          //});
+          that.loadTableau(that.defaultTableauName);
         }
       },
       beforeDestroy() {
@@ -394,8 +399,9 @@ function buildView(divId, initialLayout, initialContent=[], numCols=12, gridRowH
         index: 0,
         showSettings: authorMode,
         kioskMode: false,
-        defaultTableauName: 'welcome',
-        tableaux: []
+        defaultTableauName: 'Welcome',
+        tableaux: [],
+        locationHash: '',
       },
       computed: {
       },
@@ -420,6 +426,19 @@ function buildView(divId, initialLayout, initialContent=[], numCols=12, gridRowH
             that.sdContent = sdContent;
             that.applyContentAndFixLayout();
           });
+          that.locationHash = '#' + name;
+          window.location.hash = that.locationHash;
+        },
+        locationHashChanged: function() {
+          if (this.locationHash && this.locationHash !== window.location.hash) {
+            var tableauxName = window.location.hash.replace(/#/g, '');
+            if (this.tableaux.indexOf(tableauxName) > -1) {
+              this.loadTableau(tableauxName);
+            }
+            else {
+              console.log(`The tableaux you tried to load does not exist! Available tableaux are ${this.tableaux.toString()}`)
+            }
+          }
         },
         exportTableau: function() {
           exportTableau(this.layout, this.sdContent);
@@ -505,7 +524,7 @@ function smartdownLoaded() {
     buildColumnLayout(debugContent.length, numColumns) :
     null;
   // debugLayout = buildStaggeredLayout(3, numColumns);
-  debugLayout = null;
+  //debugLayout = null;
   gridView = buildView(vueAppDivId, debugLayout, debugContent, 12, defaultRowHeight, authorMode, authorMode);
 }
 
