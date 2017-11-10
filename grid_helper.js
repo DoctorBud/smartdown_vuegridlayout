@@ -354,10 +354,12 @@ function buildView(divId, initialLayout, initialContent=[], numCols=12, gridRowH
           this.kioskMode = window.gridHelperOptions.kioskMode;
           this.tableaux = window.gridHelperOptions.tableaux || ['Welcome', 'Comic', 'Gallery'];
           this.defaultTableauName = window.gridHelperOptions.defaultTableauName || this.tableaux[0] || 'Welcome';
+          this.locationHash = window.location.hash;
         }
         else {
           this.tableaux = ['Welcome', 'Comic', 'Gallery'];
           this.defaultTableauName = this.tableaux[0];
+          this.locationHash = window.location.hash;
         }
       },
       mounted: function() {
@@ -365,20 +367,28 @@ function buildView(divId, initialLayout, initialContent=[], numCols=12, gridRowH
         window.addEventListener('resize', that.onResize);
         window.onhashchange = that.locationHashChanged;
         //window.addEventListener('hashChange', that.locationHashChanged);
-        if (initialContent && initialLayout) {
-          this.sdContent = initialContent;
-          this.layout = initialLayout;
-          this.applyContentAndFixLayout();
-          this.locationHash = '#Debug';
-          window.location.hash = this.locationHash;
+        if (that.locationHash && that.locationHash.length !== 0) {
+          // User given a specific tableau to navigate to
+          var tableauName = that.locationHash.replace(/#/g, '');
+          that.loadTableau(tableauName);
         }
-        else {
-          //loadTableau('tableaux/' + that.defaultTableauName.toLowerCase() + '.yaml', function(layout, sdContent) {
-            //that.layout = layout;
-            //that.sdContent = sdContent;
-            //that.applyContentAndFixLayout();
-          //});
-          that.loadTableau(that.defaultTableauName);
+        else if (that.locationHash == '') {
+          // User did not provide any tableau to load, use default or debug content
+          if (initialContent && initialLayout) {
+            this.sdContent = initialContent;
+            this.layout = initialLayout;
+            this.applyContentAndFixLayout();
+            this.locationHash = '#Debug';
+            window.location.hash = this.locationHash;
+          }
+          else {
+            //loadTableau('tableaux/' + that.defaultTableauName.toLowerCase() + '.yaml', function(layout, sdContent) {
+              //that.layout = layout;
+              //that.sdContent = sdContent;
+              //that.applyContentAndFixLayout();
+            //});
+            that.loadTableau(that.defaultTableauName);
+          }
         }
       },
       beforeDestroy() {
@@ -431,12 +441,12 @@ function buildView(divId, initialLayout, initialContent=[], numCols=12, gridRowH
         },
         locationHashChanged: function() {
           if (this.locationHash && this.locationHash !== window.location.hash) {
-            var tableauxName = window.location.hash.replace(/#/g, '');
-            if (this.tableaux.indexOf(tableauxName) > -1) {
-              this.loadTableau(tableauxName);
+            var tableauName = window.location.hash.replace(/#/g, '');
+            if (this.tableaux.indexOf(tableauName) > -1) {
+              this.loadTableau(tableauName);
             }
             else {
-              console.log(`The tableaux you tried to load does not exist! Available tableaux are ${this.tableaux.toString()}`)
+              console.log(`The tableau you tried to load does not exist! Available tableaux are ${this.tableaux.toString()}`)
             }
           }
         },
