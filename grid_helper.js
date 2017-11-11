@@ -372,21 +372,16 @@ function buildView(divId, initialLayout, initialContent=[], numCols=12, gridRowH
           var tableauName = that.locationHash.replace(/#/g, '');
           that.loadTableau(tableauName);
         }
-        else if (that.locationHash == '') {
+        else if (that.locationHash === '') {
           // User did not provide any tableau to load, use default or debug content
           if (initialContent && initialLayout) {
             this.sdContent = initialContent;
             this.layout = initialLayout;
             this.applyContentAndFixLayout();
-            this.locationHash = '#Debug';
-            window.location.hash = this.locationHash;
+            //this.locationHash = '#Debug';
+            //window.location.hash = this.locationHash;
           }
           else {
-            //loadTableau('tableaux/' + that.defaultTableauName.toLowerCase() + '.yaml', function(layout, sdContent) {
-              //that.layout = layout;
-              //that.sdContent = sdContent;
-              //that.applyContentAndFixLayout();
-            //});
             that.loadTableau(that.defaultTableauName);
           }
         }
@@ -440,7 +435,7 @@ function buildView(divId, initialLayout, initialContent=[], numCols=12, gridRowH
           window.location.hash = that.locationHash;
         },
         locationHashChanged: function() {
-          if (this.locationHash && this.locationHash !== window.location.hash) {
+          if (this.locationHash !== window.location.hash) {
             var tableauName = window.location.hash.replace(/#/g, '');
             if (this.tableaux.indexOf(tableauName) > -1) {
               this.loadTableau(tableauName);
@@ -534,7 +529,7 @@ function smartdownLoaded() {
     buildColumnLayout(debugContent.length, numColumns) :
     null;
   // debugLayout = buildStaggeredLayout(3, numColumns);
-  //debugLayout = null;
+  debugLayout = null;
   gridView = buildView(vueAppDivId, debugLayout, debugContent, 12, defaultRowHeight, authorMode, authorMode);
 }
 
