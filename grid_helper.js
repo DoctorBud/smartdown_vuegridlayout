@@ -406,7 +406,7 @@ function buildView(divId, initialLayout, initialContent=[], numCols=12, gridRowH
         kioskMode: false,
         defaultTableauName: 'Welcome',
         tableaux: [],
-        currentTableau: '',
+        currentTableauName: '',
         locationHash: '',
       },
       computed: {
@@ -434,10 +434,10 @@ function buildView(divId, initialLayout, initialContent=[], numCols=12, gridRowH
           });
           that.locationHash = '#' + name;
           window.location.hash = that.locationHash;
-          that.currentTableau = name;
+          that.currentTableauName = name;
         },
         isCurrentTableau: function(name) {
-          return (this.currentTableau === name) ? true : false;
+          return this.currentTableauName === name;
         },
         locationHashChanged: function() {
           if (this.locationHash !== window.location.hash) {
