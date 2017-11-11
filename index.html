@@ -33,6 +33,7 @@
               <button
                 v-for="t in tableaux"
                 class="btn btn-default btn-xs"
+                v-bind:class="{ 'current-tableau-button': isCurrentTableau(t) }"
                 v-on:click="loadTableau(t)">
                 {{t}}
               </button>
