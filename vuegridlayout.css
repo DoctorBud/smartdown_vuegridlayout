@@ -23,6 +23,17 @@ div#layoutApp .layoutJSON {
   margin: 0;
 }
 
+.layoutJSON button.tableau-button {
+  margin: 5px 10px;
+  padding: 2px 5px;
+}
+
+.layoutJSON button.tableau-button.current {
+  background: yellow;
+  margin: 2px 5px;
+  padding: 5px 10px;
+}
+
 input#sdSelection {
 }
 
