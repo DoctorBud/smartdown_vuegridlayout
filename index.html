@@ -41,6 +41,15 @@
             <div class="col-xs-3" v-if="!kioskMode">
               <input type="checkbox" v-model="showSettings"/>&nbsp;Settings
             </div>
+            <div class="col-xs-9" v-if="kioskMode">
+              <button
+                v-for="item in layout"
+                class="btn btn-default btn-xs card-button"
+                v-bind:class="{ focused: isSdTileInFocus(item.contentURL.split('/')[1]) }"
+                v-on:click="focusOnCard(item.contentURL.split('/')[1])">
+                {{item.contentURL.split('/')[1]}}
+              </button>
+            </div>
           </div>
           <div class="row" v-if="showSettings">
             <div class="col-xs-4">
@@ -50,7 +59,7 @@
             </div>
             <div class="col-xs-8">
               <div class="row">
-                <div class="col-xs-12">
+                <div class="col-xs-12" v-if="authorMode">
                   <input
                     type="file"
                     id="sdSelection"
@@ -111,7 +120,8 @@
               </div>
               <div
                 class="no-drag smartdown-tile"
-                v-bind:id="item.divID">
+                v-bind:id="item.divID"
+                v-bind:class="{ 'in-focus': isSdTileInFocus(item.contentURL.split('/')[1]) }">
               </div>
             </grid-item>
           </grid-layout>
@@ -129,6 +139,7 @@
       //
       window.gridHelperOptions = {
         kioskMode: true,
+        authorMode: false,
         tableaux: ['Comic', 'Welcome'],
         defaultTableauName: 'Comic',
       };
