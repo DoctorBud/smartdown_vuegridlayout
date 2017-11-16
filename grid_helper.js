@@ -1,4 +1,4 @@
-const authorMode = true;
+//const authorMode = true;
 const enforceMaxHeight = false;
 
 
@@ -345,13 +345,17 @@ function exportTableau(layout, content) {
 }
 
 
-function buildView(divId, initialLayout, initialContent=[], numCols=12, gridRowHeight=200, draggable=false, resizable=false) {
+function buildView(divId, initialLayout, initialContent=[], numCols=12, gridRowHeight=200) {
   /*global Vue*/
   var view = new Vue({
       el: '#' + divId,
       created: function () {
         if (window.gridHelperOptions) {
           this.kioskMode = window.gridHelperOptions.kioskMode;
+          this.authorMode = window.gridHelperOptions.authorMode;
+          this.showSettings = this.authorMode;
+          this.draggable = this.authorMode;
+          this.resizable = this.authorMode;
           this.tableaux = window.gridHelperOptions.tableaux || ['Welcome', 'Comic', 'Gallery'];
           this.defaultTableauName = window.gridHelperOptions.defaultTableauName || this.tableaux[0] || 'Welcome';
           this.locationHash = window.location.hash;
@@ -399,15 +403,17 @@ function buildView(divId, initialLayout, initialContent=[], numCols=12, gridRowH
         rowHeight: gridRowHeight,
         numCols: numCols,
       	sdContent: [],
-        draggable: draggable,
-        resizable: resizable,
+        draggable: true, //this.authorMode,
+        resizable: true, //this.authorMode,
         index: 0,
-        showSettings: authorMode,
+        authorMode: false,
+        showSettings: true, //this.authorMode,
         kioskMode: false,
         defaultTableauName: 'Welcome',
         tableaux: [],
         currentTableauName: '',
         locationHash: '',
+        focusedCardName: '',
       },
       computed: {
       },
@@ -436,17 +442,65 @@ function buildView(divId, initialLayout, initialContent=[], numCols=12, gridRowH
           window.location.hash = that.locationHash;
           that.currentTableauName = name;
         },
-        isCurrentTableau: function(name) {
-          return this.currentTableauName === name;
+        isCurrentTableau: function(tableauName) {
+          return this.currentTableauName === tableauName;
+        },
+        isSdTileInFocus: function(cardName) {
+          return this.focusedCardName === cardName;
+        },
+        focusOnCard: function(cardName) {
+          this.focusedCardName = cardName;
+          if (this.locationHash.indexOf('-') > -1) {
+            this.locationHash = this.locationHash.split('-')[0] + '-' + cardName;
+          }
+          else {
+            this.locationHash = this.locationHash + '-' + cardName;
+          }
+          window.location.hash = this.locationHash;
         },
         locationHashChanged: function() {
-          if (this.locationHash !== window.location.hash) {
-            var tableauName = window.location.hash.replace(/#/g, '');
-            if (this.tableaux.indexOf(tableauName) > -1) {
-              this.loadTableau(tableauName);
+          if (this.locationHash !== window.location.hash && window.location.hash) {
+            console.log(`location hash changed to ${window.location.hash}`);
+            if (window.location.hash.indexOf('-') > -1) {
+              // user given both tableau name and card name
+              // hash format: #tableauName-cardName
+              console.log('location hash has -');
+              var tableauName = window.location.hash.split('-')[0];
+              tableauName = tableauName.replace(/#/g, '');
+              console.log(`tableauName is ${tableauName}`);
+              if (this.tableaux.indexOf(tableauName) > -1) {
+                console.log(`Loading tableau ${tableauName}`);
+                var cardName = window.location.hash.split('-')[1];
+                this.loadTableau(tableauName);
+                console.log(`cardName is ${cardName}`);
+                this.focusOnCard(cardName);
+                /*
+                var cardDivsOnPage = document.querySelectorAll('[id*="smartdown-output"]');
+                var cardDivNamesOnPage = [];
+                for (var cardDiv of cardDivsOnPage) {
+                  var cardURL = cardDiv.contentURL; //This when loaded from tableau is in the format of 'tableaux/cardName.md'
+                  var cardName = cardURL.split('/')[1]
+                  cardDivNamesOnPage.push(cardName);
+                }
+                if (cardDivNamesOnPage.indexOf(cardName) > -1) {
+                  this.focusedCardName = cardName;
+                }
+                */
+
+              }
+              else {
+                console.log(`The tableau you tried to load does not exist! Available tableaux are ${this.tableaux.toString()}`)
+              }
             }
-            else {
-              console.log(`The tableau you tried to load does not exist! Available tableaux are ${this.tableaux.toString()}`)
+            else if (window.location.hash.indexOf('-') === -1) {
+              // user only given tableau name to load
+              var tableauName = window.location.hash.replace(/#/g, '');
+              if (this.tableaux.indexOf(tableauName) > -1) {
+                this.loadTableau(tableauName);
+              }
+              else {
+                console.log(`The tableau you tried to load does not exist! Available tableaux are ${this.tableaux.toString()}`)
+              }
             }
           }
         },
@@ -490,6 +544,8 @@ function buildView(divId, initialLayout, initialContent=[], numCols=12, gridRowH
 	        updateSdSelection(this.sdContent, function() {
             that.layout = buildRowLayout(that.sdContent.length, that.numCols);
             that.$nextTick(function () {
+              window.location.hash = ''; //when loading files from fileReader, there's no location hash
+              that.currentTableauName = '';
               applySmartdown(that.layout, that.sdContent, function() {
                 that.fixLayout();
               });
@@ -503,7 +559,7 @@ function buildView(divId, initialLayout, initialContent=[], numCols=12, gridRowH
         resizedEvent: function(i, newH, newW, newHPx, newWPx){
           const that = this;
           console.log("RESIZED");
-          if (!authorMode) {
+          if (!that.authorMode) {
             this.$nextTick(function () {
               that.fixLayout();
             });
@@ -535,7 +591,7 @@ function smartdownLoaded() {
     null;
   // debugLayout = buildStaggeredLayout(3, numColumns);
   debugLayout = null;
-  gridView = buildView(vueAppDivId, debugLayout, debugContent, 12, defaultRowHeight, authorMode, authorMode);
+  gridView = buildView(vueAppDivId, debugLayout, debugContent, 12, defaultRowHeight);
 }
 
 var calcHandlers = null;
@@ -543,3 +599,24 @@ const linkRules = [
 ];
 
 smartdown.initialize(svgIcons, baseURL, smartdownLoaded, null, calcHandlers, linkRules);
+
+/*
+function navigateToCard(cardName) {
+  var tableauHash = window.location.hash;
+  // Right now card focusing is only implemented if loaded from a tableau
+  if (tableauHash.length !== 0) {
+    var cardDivsOnPage = document.querySelectorAll('[id*="smartdown-output"]');
+    var cardDivIDsOnPage = [];
+    for (var cardDiv of cardDivsOnPage) {
+      var cardURL = cardDiv.contentURL; //This when loaded from tableau is in the format of 'tableaux/cardName.md'
+      var cardName = cardURL.split('/')[1]
+      cardDivNamesOnPage.push(cardName);
+    }
+    if (cardDivNamesOnPage.indexOf(cardName) !== -1) {
+      focusOnCard(cardName);
+      //change location hash
+      window.location.hash = `${tableauHash}/${cardName}`;
+    }
+  }
+}
+*/

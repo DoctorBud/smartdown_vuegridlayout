@@ -34,6 +34,17 @@ div#layoutApp .layoutJSON {
   padding: 5px 10px;
 }
 
+.layoutJSON button.card-button {
+  margin: 2px 5px;
+  padding: 1px 3px;
+}
+
+.layoutJSON button.card-button.focused {
+  background: yellow;
+  margin: 1px 3px;
+  padding: 2px 5px;
+}
+
 input#sdSelection {
 }
 
@@ -96,9 +107,18 @@ div#layoutApp .vue-grid-layout .vue-grid-item .no-drag {
 }
 
 div.no-drag.smartdown-tile {
-  background: ghostwhite;
+  background: lightgrey;/*ghostwhite;*/
   margin: 0;
   padding: 5px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+div.no-drag.smartdown-tile.in-focus {
+  background: white;
+  margin: 0;
+  padding: 0px;
+  border: 1px red;
   overflow-y: auto;
   overflow-x: hidden;
 }
