@@ -2,57 +2,43 @@
 
 Smartdown Tableaux provides an additional way to present Smartdown content by allowing Smartdown documents (aka Cards) to be organized into a two-dimensional layout.
 
-```p5js/playable/autoplay
-var PI = Math.PI;
-var HALF_PI = PI / 2.0;
+---
 
-smartdown.setVariable('SEGMENTS', 30, 'number');
-smartdown.setVariable('SEG_WIDTH', 8, 'number');
-smartdown.setVariable('SEG_LENGTH', 50, 'number');
+Vector Field Example Based upon https://github.com/winkerVSbecks/material-vector-field
 
-var speed = 0.05;
-var ax = .01;
-var ay = ax;
-var az = ay;
-var dx, dy, dz;
+```p5js/playable
 
-p5.windowResized = function() {
-  p5.resizeCanvas(p5.windowWidth / 3, p5.windowWidth / 3);
-};
+var locs = [];
+function calcVec(x, y) {
+  return new P5.Vector(y - x, - x - y);
+}
 
 p5.setup = function() {
-  dx = p5.random(-speed, speed);
-  dy = p5.random(-speed, speed);
-  dz = p5.random(-speed, speed);
+  p5.createCanvas(300, 300);
 
-  p5.createCanvas(300, 300, 'webgl');
-  p5.normalMaterial();
+  var res = 20;
+  var countX = p5.ceil(p5.width/res) + 1;
+  var countY = p5.ceil(p5.height/res) + 1;
 
-  p5.windowResized();
+  for (var j = 0; j < countY; j++) {
+    for (var i = 0; i < countX; i++) {
+      locs.push( new P5.Vector(res*i, res*j) );
+    }
+  };
+
+  p5.noFill();
+  p5.stroke(249, 78, 128);
+
 };
-
 p5.draw = function() {
-  var SEGMENTS = env.SEGMENTS;
-  var SEG_WIDTH = env.SEG_WIDTH;
-  var SEG_LENGTH = env.SEG_LENGTH;
-  var DIAMETER = SEG_LENGTH * 2;
-  p5.background('ivory');
-  p5.camera(0, SEG_LENGTH, p5.windowHeight / 3, 0, 0, 0, 0, 1, 0);
-  p5.rotateX(ax += dx);
-  p5.rotateY(ay += dy);
-  p5.rotateZ(az += dz);
-
-  for (var i = 0; i < SEGMENTS; i++) {
-    var frac = i * 2 / SEGMENTS;
+  p5.background(30, 67, 137);
+  for (var i = locs.length - 1; i >= 0; i--) {
+    var h = calcVec( locs[i].x - p5.mouseX, locs[i].y - p5.mouseY);
     p5.push();
-    p5.rotateX(frac * HALF_PI);
-    p5.rotateY(HALF_PI);
-    p5.translate(
-        0,
-        DIAMETER * p5.cos(frac * HALF_PI),
-        DIAMETER * p5.sin(frac * PI));
-    p5.cylinder(SEG_WIDTH, SEG_LENGTH);
+      p5.translate(locs[i].x, locs[i].y);
+      p5.rotate(h.heading());
+      p5.line(0, 0, 0, - 15);
     p5.pop();
-  }
+  };
 };
 ```

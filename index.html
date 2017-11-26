@@ -27,125 +27,144 @@
         id="layoutApp">
 
         <div
-          class="layoutJSON">
+          class="navigationArea">
           <div class="row">
-            <div class="col-xs-9">
-              <input type="checkbox" v-model="kioskMode"/> kioskMode
-              <input type="checkbox" v-model="authorMode"/> authorMode
+            <div class="col-xs-10">
               <button
                 v-for="t in tableaux"
                 class="btn btn-default btn-xs tableau-button"
                 v-bind:class="{ current: isCurrentTableau(t) }"
-                v-on:click="loadTableau(t)">
+                v-bind:disabled="isCurrentTableau(t)"
+                v-on:click="loadTableauByName(t)">
                 {{t}}
               </button>
             </div>
-            <div class="col-xs-3" v-if="!kioskMode">
-              <input type="checkbox" v-model="showSettings"/>&nbsp;Settings
-            </div>
-            <div class="col-xs-9" v-if="kioskMode&!authorMode">
+
+            <div class="col-xs-2">
               <button
-                v-for="item in layout"
+                class="btn btn-default btn-xs"
+                v-on:click="loadHomeTableau()">
+                Home
+              </button>
+            </div>
+
+            <div class="col-xs-10">
+              <button
+                v-for="item in tableau.layout.cells"
                 class="btn btn-default btn-xs card-button"
-                v-bind:class="{ focused: isSdTileInFocus(item.contentURL.split('/')[1]) }"
-                v-on:click="focusOnCard(item.contentURL.split('/')[1])">
-                {{item.contentURL.split('/')[1]}}
+                v-bind:class="{ focused: isCardFocused(item.name) }"
+                v-on:click="toggleFocusOnCard(item.name)">
+                {{item.name}}
+              </button>
+            </div>
+            <div class="col-xs-2">
+              <button
+                class="btn btn-default btn-xs card-button"
+                v-on:click="focusOnCard('')">
+                None
               </button>
             </div>
           </div>
-          <div class="row" v-if="showSettings">
+        </div>
+
+        <div
+          v-if="!kioskMode"
+          class="authorArea"
+          @dblclick="toggleAuthorMode()">
+          <div class="row" v-if="authorMode">
+            <div class="col-xs-8">
+              <input
+                type="file"
+                id="selectedFiles"
+                accept=".md"
+                v-on:change="filesSelected"
+                multiple/>
+            </div>
             <div class="col-xs-4">
-              <div class="layoutItem" v-for="item in layout">
+              <button class="btn btn-default btn-xs" v-on:click="exportTableau">Export Tableau</button>
+            </div>
+            <div class="col-xs-12">
+              <button class="btn btn-default btn-xs" v-on:click="switchToColumnLayout">Column Layout</button>
+              <button class="btn btn-default btn-xs" v-on:click="switchToRowLayout">Row Layout</button>
+              <button class="btn btn-default btn-xs" v-on:click="switchToStaggeredLayout">Staggered Layout</button>
+              <button class="btn btn-default btn-xs" v-on:click="switchToXLayout">X Layout</button>
+            </div>
+          </div>
+          <div class="row" v-if="authorMode">
+            <div class="col-xs-12">
+              <div class="layoutItem" v-for="item in tableau.layout.cells">
                   <b>{{item.i}}</b>: [{{item.x}}, {{item.y}}, {{item.w}}, {{item.h}}]
               </div>
-            </div>
-            <div class="col-xs-8">
-              <div class="row">
-                <div class="col-xs-12" v-if="authorMode&!kioskMode">
-                  <input
-                    type="file"
-                    id="sdSelection"
-                    accept=".md"
-                    v-on:change="updateSdSelection"
-                    multiple/>
-                </div>
-              </div>
-              <div class="row">
-                <div class="col-xs-12">
-                  <button class="btn btn-default btn-xs" v-on:click="switchToColumnLayout">Column Layout</button>
-                  <button class="btn btn-default btn-xs" v-on:click="switchToRowLayout">Row Layout</button>
-                  <button class="btn btn-default btn-xs" v-on:click="exportTableau">Export Tableau</button>
-                </div>
-              </div>
-              <div class="row">
-                <div class="col-xs-8">
-                  <input type="checkbox" v-model="draggable"/> Draggable
-                  <input type="checkbox" v-model="resizable"/> Resizable
-                </div>
-
-                <div class="col-xs-4">
-                  <button class="btn btn-default btn-xs" v-on:click="fixLayout">Fix</button>
-                </div>
-
-              </div>
-
-
             </div>
           </div>
         </div>
 
         <div id="content" class="smartdown-container">
           <grid-layout  ref="layout"
-                        :layout="layout"
+                        :layout="tableau.layout.cells"
                         :col-num="numCols"
                         :row-height="rowHeight"
-                        :margin="[3, 3]"
+                        :margin="[5, 5]"
                         :is-draggable="draggable"
                         :is-resizable="resizable"
                         :vertical-compact="true"
                         :use-css-transforms="true">
-            <grid-item  v-for="item in layout" :key="item.i"
-                        :x="item.x"
-                        :y="item.y"
-                        :w="item.w"
-                        :h="item.h"
-                        :i="item.i"
-                        @resize="resizeEvent"
-                        @resized="resizedEvent"
-                        drag-allow-from=".vue-draggable-handle"
-                        drag-ignore-from=".no-drag">
+            <grid-item
+              v-for="item in tableau.layout.cells"
+              :key="item.i"
+              :x="item.x"
+              :y="item.y"
+              :w="item.w"
+              :h="item.h"
+              :i="item.i"
+              v-bind:class="{ 'in-focus': isCardFocused(item.name) }"
+              @resized="resizedEvent"
+              drag-allow-from=".vue-draggable-handle"
+              drag-ignore-from=".no-drag">
 
               <div
-                v-if="draggable"
                 class="vue-draggable-handle"
+                v-bind:class="{ 'hide-draggable': !draggable }"
                 v-on:click="dragStart">
               </div>
+
+<!--
+  work in progress to create a smartdown component and simplify applySmartdown()
+  and fitContent(). See grid_helper.js for more info.
+
+              <smartdown
+                class="no-drag smartdown-tile"
+                v-bind:class="{ 'in-focus': isCardFocused(item.name) }"
+                v-bind:id="item.divID"
+                :content="item.content">
+              </smartdown>
+ -->
+
               <div
                 class="no-drag smartdown-tile"
-                v-bind:id="item.divID"
-                v-bind:class="{ 'in-focus': isSdTileInFocus(item.contentURL.split('/')[1]) }">
+                v-bind:id="item.divID">
               </div>
             </grid-item>
           </grid-layout>
       </div>
     </div>
 
-    <script>
-      //
-      // The options below control how the grid_helper behaves.
-      // They are designed to support publishing via bl.ocks.org, a blog, or Wordpress
-      //
-      //  kioskMode - 'true' means disable the Settings checkbox
-      //  tableaux - A list of names of tableaux in the tableaux/ directory
-      //  defaultTableauName - The tableau to load by default. Default is tableaux[0]
-      //
-      window.gridHelperOptions = {
-        kioskMode: true,
-        authorMode: false,
-        tableaux: ['Comic', 'Welcome'],
-        defaultTableauName: 'Comic',
-      };
-    </script>
+<script>
+//
+// The options below control how the grid_helper behaves.
+// They are designed to support publishing via bl.ocks.org, a blog, or Wordpress
+//
+//  kioskMode - 'true' means disable the Settings checkbox
+//  tableaux - A list of names of tableaux in the tableaux/ directory
+//  defaultTableauName - The tableau to load by default. Default is tableaux[0]
+//
+window.gridHelperOptions = {
+  kioskMode: false,
+  authorMode: false,
+  tableaux: ['Welcome', 'Comic', 'Gallery', 'WebGL', 'Pegoda'],
+  defaultTableauName: 'Welcome',
+};
+</script>
     <script src="grid_helper.js"></script>
   </body>
 </html>
