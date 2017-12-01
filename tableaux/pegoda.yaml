@@ -1,0 +1,26 @@
+layout:
+  cells:
+    - posX: 0
+      posY: 0
+      dimW: 7
+      dimH: 4
+      content: >-
+        ![](http://eugeneweekly.com/sites/default/files/uploads/20141106euge.jpg)
+        [Something Euge -
+        11-6-2014](http://eugeneweekly.com/image/something-euge-11-6-14)
+    - posX: 7
+      posY: 0
+      dimW: 5
+      dimH: 3
+      content: >-
+        ![](http://www.eugeneweekly.com/sites/default/files/uploads/20170112euge-snowtweet.jpg)
+        [Something Euge -
+        1-12-2017](http://www.eugeneweekly.com/image/something-euge-2017-1-12)
+    - posX: 7
+      posY: 3
+      dimW: 5
+      dimH: 2
+      content: >-
+        ![](http://www.eugeneweekly.com/sites/default/files/uploads/imported/2009/graphics/032609somethingeug.jpg)
+        [Something Euge -
+        3-26-2009](http://www.eugeneweekly.com/2009/03/26/news.html#eug)
