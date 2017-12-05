@@ -6,7 +6,12 @@
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
 
     <link rel="stylesheet" href="vuegridlayout.css">
+
+    <!-- <link rel="stylesheet" href="https://127.0.0.1:4000/lib/smartdown.css"> -->
+    <!-- <script src="https://127.0.0.1:4000/lib/smartdown.js"></script> -->
+
     <link rel="stylesheet" href="https://unpkg.com/smartdown/docs/lib/smartdown.css">
+    <script src="https://smartdown.site/lib/smartdown.js"></script>
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
@@ -15,7 +20,6 @@
     <script src="https://unpkg.com/vue/dist/vue.js"></script>
 
     <script src="https://unpkg.com/vue-grid-layout/dist/vue-grid-layout.min.js"></script>
-    <script src="https://smartdown.site/lib/smartdown.js"></script>
   </head>
 
   <body
@@ -28,8 +32,8 @@
 
         <div
           class="navigationArea">
-          <div class="row">
-            <div class="col-xs-10">
+          <div class="row" v-if="tableaux.length > 0">
+            <div class="col-xs-10" style="padding:0;">
               <button
                 v-for="t in tableaux"
                 class="btn btn-default btn-xs tableau-button"
@@ -40,15 +44,16 @@
               </button>
             </div>
 
-            <div class="col-xs-2">
+            <div class="col-xs-2" style="padding:0;">
               <button
                 class="btn btn-default btn-xs"
                 v-on:click="loadHomeTableau()">
                 Home
               </button>
             </div>
-
-            <div class="col-xs-10">
+          </div>
+          <div class="row">
+            <div class="col-xs-10" style="padding:0;">
               <button
                 v-for="item in tableau.layout.cells"
                 class="btn btn-default btn-xs card-button"
@@ -57,7 +62,7 @@
                 {{item.name}}
               </button>
             </div>
-            <div class="col-xs-2">
+            <div class="col-xs-2" style="padding:0;">
               <button
                 class="btn btn-default btn-xs card-button"
                 v-on:click="focusOnCard('')">
@@ -69,8 +74,11 @@
 
         <div
           v-if="!kioskMode"
-          class="authorArea"
-          @dblclick="toggleAuthorMode()">
+          class="authorArea">
+          <div
+            class="toggle-author-area-button" @click="toggleAuthorMode()">
+            &nbsp;&equiv;&nbsp;
+          </div>
           <div class="row" v-if="authorMode">
             <div class="col-xs-8">
               <input
@@ -161,6 +169,7 @@
 window.gridHelperOptions = {
   kioskMode: false,
   authorMode: false,
+  tableauxPrefix: 'tableaux/',
   tableaux: ['Welcome', 'Comic', 'Gallery', 'WebGL', 'Pegoda'],
   defaultTableauName: 'Welcome',
 };

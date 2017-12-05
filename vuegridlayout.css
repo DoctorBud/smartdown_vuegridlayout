@@ -8,6 +8,19 @@ body.container {
   padding: 0 15px;
 }
 
+.toggle-author-area-button {
+  height:18px;
+  width:16px;
+  font-size:0.9em;
+  margin:-4px 0 -4px -13px;
+  color:darkslateblue;
+  border:1px solid lightgray;
+  border-radius:5px;
+  background:white;
+  cursor:pointer;
+}
+
+
 div#layoutApp {
   background: lightyellow;
   width: 100%;
@@ -19,7 +32,7 @@ div#layoutApp {
 div#layoutApp .navigationArea {
   background: aliceblue;
   width: 100%;
-  padding: 5px 15px;
+  padding: 0 12px;
   margin: 0;
   border: 1px solid lightgray;
   border-radius: 3px;
@@ -158,3 +171,5 @@ div#layoutApp .vue-grid-layout .hide-draggable {
   background: #efefef;
   border-radius: 5px;
 }
+
+

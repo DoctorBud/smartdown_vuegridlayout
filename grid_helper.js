@@ -3,36 +3,16 @@
 /* global jsyaml */
 /* eslint no-unused-vars: 0 */
 
-
 Vue.config.debug = true;
 Vue.config.devtools = true;
 
 var GridLayout = VueGridLayout.GridLayout;
 var GridItem = VueGridLayout.GridItem;
 
-//
-// work in progress to create a smartdown component and simplify applySmartdown()
-// and fitContent()
-// Requires smartdown 0.0.50
-//
-
-Vue.component('smartdown', {
-  props: ['content'],
-  template: '<div>Smartdown content: {{content}}</div>',
-  mounted() {
-    // console.log('mounted', this, this.$el.id, this.content);
-    smartdown.setSmartdown(this.content, this.$el);
-  },
-  updated() {
-    // console.log('updated', this, this.$el.id, this.content);
-    smartdown.setSmartdown(this.content, this.$el);
-  }
-});
-
-
-const enforceMaxHeight = false;
+const enforceMaxRows = true;
+const defaultMaxRows = 5;
 const defaultRowHeight = 100;
-const numColumns = 12;
+const defaultNumColumns = 12;
 const vueAppDivId = 'layoutApp';
 
 var availableTableaux = ['Welcome', 'Comic', 'Gallery', 'WebGL', 'Pegoda'];
@@ -41,7 +21,7 @@ var availableTableaux = ['Welcome', 'Comic', 'Gallery', 'WebGL', 'Pegoda'];
 function buildLayout(numContent, xDelta, yDelta, width, widthDelta, height, heightDelta) {
   xDelta = xDelta === undefined ? 0 : xDelta;
   yDelta = yDelta === undefined ? 1 : yDelta;
-  width = width === undefined ? numColumns : width;
+  width = width === undefined ? defaultNumColumns : width;
   height = height === undefined ? 1 : height;
   widthDelta = widthDelta === undefined ? -1 : widthDelta;
   heightDelta = heightDelta === undefined ? 0 : heightDelta;
@@ -54,9 +34,9 @@ function buildLayout(numContent, xDelta, yDelta, width, widthDelta, height, heig
     let w = width + widthDelta * index;
     let h = height + heightDelta * index;
 
-    if (x + w >= numColumns) {
+    if (x + w >= defaultNumColumns) {
       ++y;
-      x = x % numColumns;
+      x = x % defaultNumColumns;
     }
     layout.push({
       x: x,
@@ -95,7 +75,7 @@ function buildXLayout(numContent) {
   // UR corner
   for (let i = 0; i < numContentPerCorner; ++i) {
     let cell = {
-      x: numColumns - numContentPerCorner * w + (i * w),
+      x: defaultNumColumns - numContentPerCorner * w + (i * w),
       y: 0,
       w: w,
       h: 1,
@@ -135,7 +115,7 @@ function buildXLayout(numContent) {
   // LR corner
   for (let i = 0; i < numContentPerCorner; ++i) {
     let cell = {
-      x: numColumns - numContentPerCorner * w + (i * w),
+      x: defaultNumColumns - numContentPerCorner * w + (i * w),
       y: 6,
       w: w,
       h: 1,
@@ -169,22 +149,24 @@ function fitContent(tableau, rowHeight, maxRows) {
         sumHeight += innerChild.clientHeight;
       }
 
-      var newHeight = Math.floor(sumHeight / rowHeight) + 1;
-      if (maxRows && newHeight > maxRows) {
+      sumHeight *= 1.5; // total hack to compensate for imperfect size calc.
+      var newHeight = Math.round(sumHeight / rowHeight);
+      // console.log('fitContent', maxRows, rowHeight, sumHeight, layoutElement.h, newHeight);
+      if (enforceMaxRows && maxRows && newHeight > maxRows) {
         newHeight = maxRows;
       }
-      // console.log('...fitContent', rowHeight, sumHeight, layoutElement.h, newHeight);
       layoutElement.h = newHeight;
       layoutElement.moved = true;
     }
   });
 }
 
-
-function applySmartdown(loadedTableau, done) {
-  var loadedTableauCells = loadedTableau.layout.cells;
-  var unresolvedItems = loadedTableauCells.length;
-  loadedTableauCells.forEach(function(layoutElement, layoutElementIndex) {
+function applySmartdownRecursively(loadedTableauCells, done) {
+  if (loadedTableauCells.length === 0) {
+    done();
+  }
+  else {
+    var layoutElement = loadedTableauCells[0];
     var divID = layoutElement.divID;
     var div = document.getElementById(divID);
     if (!div) {
@@ -196,15 +178,12 @@ function applySmartdown(loadedTableau, done) {
       smartdown.setSmartdown(content, div, function() {
         smartdown.startAutoplay(div);
 
-        if (--unresolvedItems === 0) {
-          done();
-        }
+        applySmartdownRecursively(loadedTableauCells.slice(1), done);
       });
 
     }
-  });
+  }
 }
-
 
 
 function applyLayoutAndContentToTableau(layout, content, loadedTableau, done) {
@@ -400,7 +379,7 @@ function parseHash(hash) {
 }
 
 
-function buildView(divId, initialTableau, numCols=12, gridRowHeight=200) {
+function buildView(divId, initialTableau, numCols=defaultNumColumns, gridRowHeight=defaultRowHeight) {
   /*global Vue*/
   var view = new Vue({
     el: '#' + divId,
@@ -419,7 +398,7 @@ function buildView(divId, initialTableau, numCols=12, gridRowHeight=200) {
       },
       currentTableauName: '',
       rowHeight: gridRowHeight,
-      maxRows: 5,
+      maxRows: defaultMaxRows,
       numCols: numCols,
       draggable: false,
       resizable: false,
@@ -438,6 +417,7 @@ function buildView(divId, initialTableau, numCols=12, gridRowHeight=200) {
         this.authorMode = window.gridHelperOptions.authorMode;
         this.draggable = this.authorMode;
         this.resizable = this.authorMode;
+        this.tableauxPrefix = window.gridHelperOptions.tableauxPrefix || '';
         this.tableaux = window.gridHelperOptions.tableaux || availableTableaux;
         this.defaultTableauName = window.gridHelperOptions.defaultTableauName || this.tableaux[0] || 'Welcome';
       }
@@ -489,7 +469,7 @@ function buildView(divId, initialTableau, numCols=12, gridRowHeight=200) {
       loadTableauByName(tableauName, cardName) {
         var that = this;
 
-        loadTableauFromURL('tableaux/' + tableauName.toLowerCase() + '.yaml', cardName, function(tableau, cardName) {
+        loadTableauFromURL(this.tableauxPrefix + tableauName.toLowerCase() + '.yaml', cardName, function(tableau, cardName) {
           that.loadTableauData(tableau, tableauName, cardName);
         });
       },
@@ -503,7 +483,8 @@ function buildView(divId, initialTableau, numCols=12, gridRowHeight=200) {
           that.focusOnCard(cardName);
 
           that.$nextTick(function() {
-            applySmartdown(loadedTableau, function() {
+            var loadedTableauCells = loadedTableau.layout.cells;
+            applySmartdownRecursively(loadedTableauCells, function() {
               that.fixLayout();
             });
           });
@@ -627,7 +608,8 @@ function buildView(divId, initialTableau, numCols=12, gridRowHeight=200) {
             that.locationHash = '';
             window.location.hash = '';
             that.$nextTick(function() {
-              applySmartdown(tableau, function() {
+              var loadedTableauCells = tableau.layout.cells;
+              applySmartdownRecursively(tableau, function() {
                 that.fixLayout();
               });
             });
@@ -702,7 +684,7 @@ var debugTableau = {
       {
         posX: 0,
         posY: 0,
-        dimW: 12,
+        dimW: defaultNumColumns,
         dimH: 3,
         content: debugCard0
       },
@@ -733,7 +715,7 @@ function cardLoader(cardName) {
 
 function smartdownLoaded() {
   debugTableau = null;
-  vueApp = buildView(vueAppDivId, debugTableau, 12, defaultRowHeight);
+  vueApp = buildView(vueAppDivId, debugTableau);
 }
 
 var calcHandlers = null;
@@ -743,23 +725,23 @@ const linkRules = [
 
 smartdown.initialize(svgIcons, baseURL, smartdownLoaded, cardLoader, calcHandlers, linkRules);
 
-/*
-function navigateToCard(cardName) {
-  var tableauHash = window.location.hash;
-  // Right now card focusing is only implemented if loaded from a tableau
-  if (tableauHash.length !== 0) {
-    var cardDivsOnPage = document.querySelectorAll('[id*="smartdown-output"]');
-    var cardDivIDsOnPage = [];
-    for (var cardDiv of cardDivsOnPage) {
-      var cardURL = cardDiv.contentURL; //This when loaded from tableau is in the format of 'tableaux/cardName.md'
-      var cardName = cardURL.split('/')[1]
-      cardDivNamesOnPage.push(cardName);
-    }
-    if (cardDivNamesOnPage.indexOf(cardName) !== -1) {
-      focusOnCard(cardName);
-      //change location hash
-      window.location.hash = `${tableauHash}/${cardName}`;
-    }
-  }
-}
-*/
+//
+// work in progress to create a smartdown component and simplify applySmartdown()
+// and fitContent()
+// Requires smartdown 0.0.50
+//
+
+// Vue.component('smartdown', {
+//   props: ['content'],
+//   template: '<div>Smartdown content: {{content}}</div>',
+//   mounted() {
+//     // console.log('mounted', this, this.$el.id, this.content);
+//     smartdown.setSmartdown(this.content, this.$el);
+//   },
+//   updated() {
+//     // console.log('updated', this, this.$el.id, this.content);
+//     smartdown.setSmartdown(this.content, this.$el);
+//   }
+// });
+
+
