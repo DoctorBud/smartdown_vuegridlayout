@@ -140,18 +140,15 @@ function fitContent(tableau, rowHeight, maxRows) {
     }
     else {
       var innerContainerChildren = gridCellDiv.children;
-      // console.log('...innerContainerChildren', innerContainerChildren);
       var sumHeight = 0;
       var numInnerChildren = innerContainerChildren.length;
       for (var i = 0; i < numInnerChildren; ++i) {
         var innerChild = innerContainerChildren[i];
-        // console.log('...innerChild', innerChild, innerChild.clientHeight);
         sumHeight += innerChild.clientHeight;
       }
 
       sumHeight *= 1.5; // total hack to compensate for imperfect size calc.
       var newHeight = Math.round(sumHeight / rowHeight);
-      // console.log('fitContent', maxRows, rowHeight, sumHeight, layoutElement.h, newHeight);
       if (enforceMaxRows && maxRows && newHeight > maxRows) {
         newHeight = maxRows;
       }
@@ -180,18 +177,49 @@ function applySmartdownRecursively(loadedTableauCells, done) {
 
         applySmartdownRecursively(loadedTableauCells.slice(1), done);
       });
-
     }
   }
 }
 
-
-function applyLayoutAndContentToTableau(layout, content, loadedTableau, done) {
+//
+// This function is overloaded a little too much and perhaps should be broken
+// up into two functions. Right now, 'extend' means that 'loadedTableau' will be used, and perhaps
+// added to with 'content'. Otherwise, 'content' is used and a layout is synthesized.
+//
+function applyLayoutAndContentToTableau(extend, numCols, content, loadedTableau, done) {
   var tableauCells = [];
+  var maxY = 0;
+  var baseIndex = 0;
+  var layout = null;
+  if (extend) {
+    loadedTableau.layout.cells.forEach(function(cell) {
+      var cellY = cell.y + cell.h;
+      if (cellY > maxY) {
+        maxY = cellY;
+      }
+
+      tableauCells.push(cell);
+    });
+
+    baseIndex = tableauCells.length;
+  }
+  else {
+    layout = buildLayout(content.length, 1, 1, numCols, -1, 1, 0);
+    //                                        xDelta, yDelta, width, widthDelta, height, heightDelta
+
+
+  }
   content.forEach(function(contentElement, loadedElementIndex) {
-    var index = loadedElementIndex.toString();
+    var index = loadedElementIndex + baseIndex;
     var cellName = `Card${index}`;
-    var layoutElement = layout[loadedElementIndex];
+    var layoutElement = layout ?
+                          layout[loadedElementIndex] :
+                          {
+                            x: 0,
+                            y: ++maxY,
+                            w: defaultNumColumns,
+                            h: 1
+                          };
 
     var tableauCell = {
       x: layoutElement.x,
@@ -327,11 +355,11 @@ function exportTableau(tableau) {
   };
 
   var yaml = jsyaml.dump(tableauToExport);
-
   yaml += '\n';
+
   var filename = 'tableau.yaml';
   var yamlExportData =
-    encodeURI('data:text/x-yaml;charset=utf-8,' + yaml);
+    'data:text/x-yaml;charset=utf-8,' + encodeURIComponent(yaml);
 
   var link = document.createElement('a');
   link.href = yamlExportData;
@@ -344,6 +372,7 @@ function exportTableau(tableau) {
 
 
 function filesSelected(done) {
+  var loadedTableau = '';
   var loadedContent = [];
 
   // !This is bad, how is a method within a view to know about DOM elements?!
@@ -351,15 +380,24 @@ function filesSelected(done) {
   var numItemsLeft = selectedFiles.length;
   function fileLoaded(index) {
     return function(event) {
-      loadedContent[index] = event.target.result;
+      var name = selectedFiles[index].name;
+      if (name.endsWith('.yaml') && loadedTableau === '') {
+        loadedTableau = event.target.result;
+      }
+      else if (name.endsWith('.md')) {
+        loadedContent.push(event.target.result);
+      }
+      else {
+        console.log('Error:', name);
+      }
+
       if (--numItemsLeft === 0) {
-        done(loadedContent);
+        done(loadedTableau, loadedContent);
       }
     };
   }
 
   for (var indexOfFile = 0; indexOfFile < selectedFiles.length; indexOfFile++) {
-    loadedContent.push('Waiting to be loaded with content asynchronously');
     var reader = new FileReader();
     reader.onloadend = fileLoaded(indexOfFile);
     reader.readAsText(selectedFiles[indexOfFile]);
@@ -597,23 +635,36 @@ function buildView(divId, initialTableau, numCols=defaultNumColumns, gridRowHeig
 
       filesSelected() {
         var that = this;
-        filesSelected(function(loadedContent) {
-          var layout = buildLayout(loadedContent.length,
-            1, 1, this.numCols, -1, 1, 0);
-          //xDelta, yDelta, width, widthDelta, height, heightDelta
+        filesSelected(function(loadedTableauString, loadedContent) {
+          var hasTableau = loadedTableauString !== '';
 
-          applyLayoutAndContentToTableau(layout, loadedContent, that.tableau, function(tableau) {
-            that.tableau = tableau;
-            that.currentTableauName = '';
-            that.locationHash = '';
-            window.location.hash = '';
-            that.$nextTick(function() {
-              var loadedTableauCells = tableau.layout.cells;
-              applySmartdownRecursively(tableau, function() {
-                that.fixLayout();
+          function applyAdditionalContent(extend) {
+            applyLayoutAndContentToTableau(extend, this.numCols, loadedContent, that.tableau, function(tableau) {
+              that.tableau = tableau;
+              that.currentTableauName = '';
+              that.locationHash = '';
+              window.location.hash = '';
+              that.$nextTick(function() {
+                var loadedTableauCells = tableau.layout.cells;
+                applySmartdownRecursively(loadedTableauCells, function() {
+                  that.fixLayout();
+                });
               });
             });
-          });
+          }
+
+          if (hasTableau) {
+            var tableau = jsyaml.safeLoad(loadedTableauString);
+            loadTableauData(tableau, '', function(loadedTableau, cardName) {
+              that.tableau = loadedTableau;
+              that.currentTableauName = '';
+              that.focusOnCard(cardName);
+              applyAdditionalContent(true);
+            });
+          }
+          else {
+            applyAdditionalContent(false);
+          }
         });
       },
 
@@ -709,7 +760,6 @@ var debugTableau = {
 var vueApp = null;
 
 function cardLoader(cardName) {
-  console.log('cardloader', cardName, vueApp);
   vueApp.focusOnCard(cardName);
 }
 
