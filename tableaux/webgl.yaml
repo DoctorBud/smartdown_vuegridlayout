@@ -9,9 +9,9 @@ layout:
       posY: 3
       dimW: 6
       dimH: 3
-      contentURL: 'https://smartdown.site/lib/gallery/Three.md'
+      contentURL: 'https://smartdown.site/gallery/Three.md'
     - posX: 6
       posY: 0
       dimW: 6
       dimH: 9
-      contentURL: 'https://smartdown.site/lib/gallery/Mobius.md'
+      contentURL: 'https://smartdown.site/gallery/Mobius.md'

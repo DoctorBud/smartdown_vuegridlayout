@@ -4,24 +4,24 @@ layout:
       posY: 0
       dimW: 12
       dimH: 21
-      contentURL: 'https://smartdown.site/lib/gallery/Math.md'
+      contentURL: 'https://smartdown.site/gallery/Math.md'
     - posX: 0
       posY: 21
       dimW: 6
       dimH: 12
-      contentURL: 'https://smartdown.site/lib/gallery/D3.md'
+      contentURL: 'https://smartdown.site/gallery/D3.md'
     - posX: 0
       posY: 33
       dimW: 6
       dimH: 15
-      contentURL: 'https://smartdown.site/lib/gallery/Graphviz.md'
+      contentURL: 'https://smartdown.site/gallery/Graphviz.md'
     - posX: 6
       posY: 21
       dimW: 6
       dimH: 28
-      contentURL: 'https://smartdown.site/lib/gallery/Maps.md'
+      contentURL: 'https://smartdown.site/gallery/Maps.md'
     - posX: 2
       posY: 49
       dimW: 6
       dimH: 16
-      contentURL: 'https://smartdown.site/lib/gallery/P5JS.md'
+      contentURL: 'https://smartdown.site/gallery/P5JS.md'

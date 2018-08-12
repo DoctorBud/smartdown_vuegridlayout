@@ -263,6 +263,7 @@ function applyLayoutToTableau(layout, rowHeight, loadedTableau, done) {
 
 // Should be called tab
 function loadTableauData(tableau, cardName, done) {
+  // console.log('loadTableauData', tableau, cardName);
   var cells = tableau.layout.cells;
   var layout = [];
   var cellsRemainingUntilDone = cells.length;
@@ -274,6 +275,7 @@ function loadTableauData(tableau, cardName, done) {
       var pathElements = cell.contentURL.split('/');
       cellName = pathElements[pathElements.length - 1];
     }
+    // console.log('cell.contentURL', this, cell.contentURL, tableau);
     var layoutCell = {
       x: cell.posX,
       y: cell.posY,
@@ -319,9 +321,12 @@ function loadTableauData(tableau, cardName, done) {
 
 
 function loadTableauFromURL(tableauURL, cardName, done) {
+  // console.log('loadTableauFromURL', tableauURL);
   var oReq = new XMLHttpRequest();
+  var that = this;
   oReq.addEventListener('load', function() {
-    var tableau = jsyaml.safeLoad(this.responseText);
+    // console.log('...loaded', tableauURL, that);
+    var tableau = jsyaml.safeLoad(oReq.responseText);
     done(tableau, cardName);
   });
   oReq.open('GET', tableauURL);
@@ -451,6 +456,7 @@ function buildView(divId, initialTableau, numCols=defaultNumColumns, gridRowHeig
 
     created() {
       if (window.gridHelperOptions) {
+        this.base = window.gridHelperOptions.base;
         this.kioskMode = window.gridHelperOptions.kioskMode;
         this.authorMode = window.gridHelperOptions.authorMode;
         this.draggable = this.authorMode;
@@ -506,10 +512,10 @@ function buildView(divId, initialTableau, numCols=defaultNumColumns, gridRowHeig
 
       loadTableauByName(tableauName, cardName) {
         var that = this;
-
         loadTableauFromURL(this.tableauxPrefix + tableauName.toLowerCase() + '.yaml', cardName, function(tableau, cardName) {
           that.loadTableauData(tableau, tableauName, cardName);
         });
+
       },
 
       loadTableauData(tableau, tableauName, cardName) {
